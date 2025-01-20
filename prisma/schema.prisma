@@ -1,0 +1,147 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  PENDING
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+}
+
+enum SlotType {
+  PRACTICE
+  MATCH
+  TRAINING
+}
+
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  CANCELLED
+}
+
+enum AvailableSports {
+  FOOTBALL
+}
+
+enum AvailableStates {
+  DELHI
+  GURGAON
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  name         String
+  password     String
+  phone        String
+  age          Int
+  role         Role
+  skillsRating Int       @default(0)
+  isVerified   Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  otp          String?
+  otpExpiresAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  bookings  Booking[]
+  address   Address?  @relation(fields: [addressId], references: [id])
+  addressId String?   @unique @db.Uuid
+}
+
+model Address {
+  id         String          @id @default(uuid()) @db.Uuid
+  street     String
+  city       String
+  state      AvailableStates
+  postalCode String
+  country    String          @default("INDIA")
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  User       User?
+  Venue      Venue?
+}
+
+model Venue {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  address   Address @relation(fields: [addressId], references: [id])
+  addressId String  @unique @db.Uuid
+
+  sports Sport[]
+  slots  Slot[]
+}
+
+model Sport {
+  id          String          @id @default(uuid()) @db.Uuid
+  name        AvailableSports @unique
+  rules       Json            @db.JsonB
+  totalPlayer Int
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  venues Venue[]
+  slots  Slot[]
+}
+
+model Slot {
+  id        String     @id @default(uuid()) @db.Uuid
+  startTime DateTime
+  endTime   DateTime
+  slotType  SlotType   @default(MATCH)
+  status    SlotStatus
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  bookings Booking[]
+  sport    Sport     @relation(fields: [sportId], references: [id])
+  sportId  String    @db.Uuid
+  venue    Venue     @relation(fields: [venueId], references: [id])
+  venueId  String    @db.Uuid
+}
+
+model Booking {
+  id              String        @id @default(uuid()) @db.Uuid
+  status          BookingStatus
+  cancellationFee Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  transaction     Transaction?
+  slot            Slot          @relation(fields: [slotId], references: [id])
+  slotId          String        @db.Uuid
+  user            User          @relation(fields: [userId], references: [id])
+  userId          String        @db.Uuid
+}
+
+model Transaction {
+  id                  String        @id @default(uuid()) @db.Uuid
+  booking             Booking       @relation(fields: [bookingId], references: [id])
+  bookingId           String        @unique @db.Uuid
+  stripeTransactionId String        @unique
+  referenceId         String
+  amount              Float
+  currency            String
+  status              PaymentStatus
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+}
