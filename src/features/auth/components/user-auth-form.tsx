@@ -1,71 +1,69 @@
-"use client";
-import { Button } from "@/components/ui/button";
+'use client';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { useTransition } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import * as z from "zod";
+  FormMessage
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
+import { useTransition } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import * as z from 'zod';
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Enter a valid email address" }),
+  email: z.string().email({ message: 'Enter a valid email address' }),
   password: z
     .string()
-    .min(8, { message: "Password must be at least 8 characters long" })
-    .max(64, { message: "Password must not exceed 64 characters" })
+    .min(8, { message: 'Password must be at least 8 characters long' })
+    .max(64, { message: 'Password must not exceed 64 characters' })
     .regex(/[A-Z]/, {
-      message: "Password must contain at least one uppercase letter",
+      message: 'Password must contain at least one uppercase letter'
     })
     .regex(/[a-z]/, {
-      message: "Password must contain at least one lowercase letter",
+      message: 'Password must contain at least one lowercase letter'
     })
-    .regex(/[0-9]/, { message: "Password must contain at least one number" })
+    .regex(/[0-9]/, { message: 'Password must contain at least one number' })
     .regex(/[@$!%*?&#]/, {
-      message: "Password must contain at least one special character",
-    }),
+      message: 'Password must contain at least one special character'
+    })
 });
 
 type UserFormValue = z.infer<typeof formSchema>;
 
 export default function UserAuthForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl = searchParams.get('callbackUrl');
   const [loading, startTransition] = useTransition();
   const defaultValues = {
-    email: "",
-    password: "",
+    email: '',
+    password: ''
   };
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues
   });
 
   const onSubmit = async (data: UserFormValue) => {
     startTransition(() => {
-      signIn("credentials", {
+      signIn('credentials', {
         email: data.email,
         password: data.password,
-        callbackUrl: callbackUrl ?? "/dashboard",
+        callbackUrl: callbackUrl ?? '/dashboard'
       })
         .then((response) => {
-          if (response?.error) {
-            toast.error("Invalid credentials, please try again.");
-          } else {
-            toast.success("Signed In Successfully!");
+          if (response) {
+            toast.success('Signed In Successfully!');
           }
         })
         .catch((error) => {
-          toast.error("An error occurred. Please try again.");
+          toast.error('An error occurred. Please try again.');
         });
     });
   };
@@ -75,18 +73,18 @@ export default function UserAuthForm() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="w-full space-y-2"
+          className='w-full space-y-2'
         >
           <FormField
             control={form.control}
-            name="email"
+            name='email'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
-                    type="email"
-                    placeholder="Enter your email..."
+                    type='email'
+                    placeholder='Enter your email...'
                     disabled={loading}
                     {...field}
                   />
@@ -97,14 +95,14 @@ export default function UserAuthForm() {
           />
           <FormField
             control={form.control}
-            name="password"
+            name='password'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input
-                    type="password"
-                    placeholder="Enter your password..."
+                    type='password'
+                    placeholder='Enter your password...'
                     disabled={loading}
                     {...field}
                   />
@@ -114,7 +112,7 @@ export default function UserAuthForm() {
             )}
           />
 
-          <Button disabled={loading} className="ml-auto w-full" type="submit">
+          <Button disabled={loading} className='ml-auto w-full' type='submit'>
             Continue With Email
           </Button>
         </form>

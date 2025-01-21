@@ -3,8 +3,8 @@ import { buttonVariants } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
-import ProductListingPage from '@/features/venues/components/venue-listing';
-import ProductTableAction from '@/features/venues/components/venues-tables/product-table-action';
+import SportListingPage from '@/features/sport/components/sport-listing';
+import SportTableAction from '@/features/sport/components/sport-tables/product-table-action';
 import { searchParamsCache, serialize } from '@/lib/searchparams';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
@@ -32,21 +32,21 @@ export default async function Page(props: pageProps) {
     <PageContainer scrollable={false}>
       <div className='flex flex-1 flex-col space-y-4'>
         <div className='flex items-start justify-between'>
-          <Heading title='Venues' description='Manage all available venues' />
+          <Heading title='Sports' description='Manage all available sports' />
           <Link
-            href='/dashboard/venues/new'
+            href='/dashboard/sports/new'
             className={cn(buttonVariants(), 'text-xs md:text-sm')}
           >
             <Plus className='mr-2 h-4 w-4' /> Add New
           </Link>
         </div>
         <Separator />
-        <ProductTableAction />
+        <SportTableAction />
         <Suspense
           key={key}
           fallback={<DataTableSkeleton columnCount={5} rowCount={10} />}
         >
-          <ProductListingPage />
+          <SportListingPage />
         </Suspense>
       </div>
     </PageContainer>

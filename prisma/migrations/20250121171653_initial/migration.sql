@@ -60,6 +60,8 @@ CREATE TABLE "Venue" (
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "images" TEXT[],
+    "description" TEXT NOT NULL,
     "addressId" UUID NOT NULL,
 
     CONSTRAINT "Venue_pkey" PRIMARY KEY ("id")
@@ -69,7 +71,7 @@ CREATE TABLE "Venue" (
 CREATE TABLE "Sport" (
     "id" UUID NOT NULL,
     "name" "AvailableSports" NOT NULL,
-    "rules" JSONB NOT NULL,
+    "rules" TEXT[],
     "totalPlayer" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -123,7 +125,9 @@ CREATE TABLE "Transaction" (
 -- CreateTable
 CREATE TABLE "_SportToVenue" (
     "A" UUID NOT NULL,
-    "B" UUID NOT NULL
+    "B" UUID NOT NULL,
+
+    CONSTRAINT "_SportToVenue_AB_pkey" PRIMARY KEY ("A","B")
 );
 
 -- CreateIndex
@@ -143,9 +147,6 @@ CREATE UNIQUE INDEX "Transaction_bookingId_key" ON "Transaction"("bookingId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Transaction_stripeTransactionId_key" ON "Transaction"("stripeTransactionId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "_SportToVenue_AB_unique" ON "_SportToVenue"("A", "B");
 
 -- CreateIndex
 CREATE INDEX "_SportToVenue_B_index" ON "_SportToVenue"("B");

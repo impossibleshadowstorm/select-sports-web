@@ -2,9 +2,8 @@ import { CredentialsSignin, NextAuthConfig } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GithubProvider from 'next-auth/providers/github';
 
-
 class InvalidLoginError extends CredentialsSignin {
-  code = "Invalid identifier or password"
+  code = 'Invalid identifier or password';
 }
 
 const authConfig = {
@@ -24,32 +23,33 @@ const authConfig = {
       },
       async authorize(credentials, req) {
         const { email, password } = credentials ?? {};
-      
+
         if (!email || !password) {
           throw new InvalidLoginError();
         }
-      
+
         try {
           const res = await fetch('http://localhost:3005/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password })
           });
-      
+
           if (!res.ok) {
-            throw new InvalidLoginError();
+            return null;
           }
-      
+
           const user = await res.json();
-      
+
           return {
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role,
+            role: user.role
           };
-        } catch (error) { // eslint-disable-line
-          throw new InvalidLoginError();
+        } catch (error) {
+          // eslint-disable-line
+          return null;
         }
       }
     })
@@ -70,9 +70,9 @@ const authConfig = {
         session.user.email = token.email;
       }
       return session;
-    },
+    }
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET
 } satisfies NextAuthConfig;
 
 export default authConfig;
