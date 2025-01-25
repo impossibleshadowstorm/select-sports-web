@@ -19,22 +19,27 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { formatSportName } from '@/lib/utils/string-utils';
+import { authorizedPost } from '@/lib/api-client';
+import { FirstLetterCaps } from '@/lib/utils/string-utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AvailableSports, Sport } from '@prisma/client';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import * as z from 'zod';
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: 'Sport name must be at least 2 characters.'
+  name: z.string(),
+  rules: z.array(z.string().min(1, 'Rule must not be empty.')).min(1, {
+    message: 'You must add at least one rule.'
   }),
-  rules: z.string().array().min(1, {
-    message: 'The array must contain at least one string.'
-  }),
-  totalPlayer: z.number().min(1, {
-    message: 'Total players must be at least 1.'
-  })
+  totalPlayer: z
+    .number({ invalid_type_error: 'Total players must be a number.' })
+    .min(1, {
+      message: 'Total players must be at least 1.'
+    })
 });
 
 export default function SportForm({
@@ -44,9 +49,13 @@ export default function SportForm({
   initialData: Sport | null;
   pageTitle: string;
 }) {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [loading, startTransition] = useTransition();
+
   const defaultValues = {
     name: initialData?.name || '',
-    rules: initialData?.rules || [],
+    rules: initialData?.rules || [''],
     totalPlayer: initialData?.totalPlayer || 1
   };
 
@@ -55,8 +64,45 @@ export default function SportForm({
     values: defaultValues
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  const [rules, setRules] = useState<string[]>(defaultValues.rules);
+
+  const addRule = () => {
+    setRules([...rules, '']);
+  };
+
+  const updateRule = (index: number, value: string) => {
+    const updatedRules = [...rules];
+    updatedRules[index] = value;
+    setRules(updatedRules);
+    form.setValue('rules', updatedRules);
+  };
+
+  const removeRule = (index: number) => {
+    const updatedRules = rules.filter((_: any, i: number) => i !== index);
+    setRules(updatedRules);
+    form.setValue('rules', updatedRules);
+  };
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    startTransition(async () => {
+      try {
+        const response: any = await authorizedPost(
+          '/admin/sports/',
+          session?.user?.id!,
+          values
+        );
+
+        if (response.status === 201) {
+          toast.success(response.message);
+          form.reset(defaultValues);
+          router.push('/dashboard/sports');
+        } else {
+          toast.error(response.message);
+        }
+      } catch (error) {
+        toast.error('An error occurred. Please try again.');
+      }
+    });
   }
 
   return (
@@ -75,20 +121,22 @@ export default function SportForm({
                 name='name'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>Sport Name</FormLabel>
                     <Select
-                      onValueChange={(value) => field.onChange(value)}
-                      value={field.value[field.value.length - 1]}
+                      onValueChange={(value) => {
+                        if (value !== '') form.setValue(field.name, value);
+                      }}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder='Select categories' />
+                          <SelectValue placeholder='Select Sport' />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {Object.values(AvailableSports).map((sport, index) => (
                           <SelectItem key={sport + index} value={sport}>
-                            {formatSportName(sport)}
+                            {FirstLetterCaps(sport)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -104,24 +152,11 @@ export default function SportForm({
                   <FormItem>
                     <FormLabel>Total Player</FormLabel>
                     <FormControl>
-                      <Input placeholder='Enter Total Player' {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='name'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Price</FormLabel>
-                    <FormControl>
                       <Input
-                        type='number'
-                        step='0.01'
-                        placeholder='Enter price'
-                        {...field}
+                        placeholder='Enter Total Player'
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value}
+                        disabled={loading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -129,24 +164,81 @@ export default function SportForm({
                 )}
               />
             </div>
+
             <FormField
               control={form.control}
-              name='description'
-              render={({ field }) => (
+              name='rules'
+              render={() => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder='Enter product description'
-                      className='resize-none'
-                      {...field}
-                    />
-                  </FormControl>
+                  <FormLabel>Rules</FormLabel>
+                  <>
+                    {rules.map((rule, index) => (
+                      <div key={index} className='mb-2 flex items-center gap-4'>
+                        <FormControl>
+                          <Textarea
+                            placeholder={`Rule ${index + 1}`}
+                            value={rule}
+                            onChange={(e) => updateRule(index, e.target.value)}
+                            className='resize-none'
+                            disabled={loading}
+                          />
+                        </FormControl>
+                        <Button
+                          type='button'
+                          onClick={() => removeRule(index)}
+                          variant='outline'
+                          className='px-3'
+                          disabled={loading}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type='button'
+                      onClick={addRule}
+                      className='mt-2'
+                      disabled={loading}
+                    >
+                      Add Rule
+                    </Button>
+                  </>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type='submit'>Add Product</Button>
+
+            {/* <FormItem>
+              <FormLabel>Rules</FormLabel>
+              {rules.map((rule: string, index: number) => (
+                <div key={index} className="flex items-center gap-4 mb-2">
+                  <FormControl>
+                  <Input placeholder={`Rule ${index + 1}`}  />
+                    <Textarea
+                      placeholder={`Rule ${index + 1}`}
+                      value={rule}
+                      onChange={(e) => updateRule(index, e.target.value)}
+                      className="resize-none"
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    onClick={() => removeRule(index)}
+                    variant="outline"
+                    className="px-3"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" onClick={addRule} className="mt-2">
+                Add Rule
+              </Button>
+              <FormMessage />
+            </FormItem> */}
+            <Button type='submit' disabled={loading}>
+              Add Product
+            </Button>
           </form>
         </Form>
       </CardContent>

@@ -3,8 +3,8 @@ import { buttonVariants } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
-import ProductListingPage from '@/features/venues/components/venue-listing';
-import ProductTableAction from '@/features/venues/components/venues-tables/product-table-action';
+import VenueListingPage from '@/features/venues/components/venue-listing';
+import VenueTableAction from '@/features/venues/components/venues-tables/venue-table-action';
 import { searchParamsCache, serialize } from '@/lib/searchparams';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
@@ -41,12 +41,12 @@ export default async function Page(props: pageProps) {
           </Link>
         </div>
         <Separator />
-        <ProductTableAction />
+        <VenueTableAction />
         <Suspense
           key={key}
           fallback={<DataTableSkeleton columnCount={5} rowCount={10} />}
         >
-          <ProductListingPage />
+          <VenueListingPage />
         </Suspense>
       </div>
     </PageContainer>

@@ -1,5 +1,5 @@
 import { searchParamsCache } from '@/lib/searchparams';
-import { DataTable as ProductTable } from '@/components/ui/table/data-table';
+import { DataTable as VenueTable } from '@/components/ui/table/data-table';
 import { columns } from './venues-tables/columns';
 import { Venue } from '@prisma/client';
 import { get } from '@/lib/api-client';
@@ -20,11 +20,11 @@ export default async function VenueListingPage({}: VenueListingPage) {
     ...(categories && { categories: categories })
   };
 
-  const response = await get<{ data: Venue[] }>('/venues/');
+  const response = await get('/venues/');
   const venues: Venue[] = response.data;
 
   return (
-    <ProductTable<Venue, unknown>
+    <VenueTable<Venue, unknown>
       columns={columns}
       data={venues}
       totalItems={venues.length}

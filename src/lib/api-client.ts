@@ -11,7 +11,7 @@ export function downloadURI(uri: string, name: string): void {
 }
 
 export const host: string =
-  process.env.NEXT_PUBLIC_SITE_BACKEND_HOST || 'http://localhost:3005/api/';
+  process.env.NEXT_PUBLIC_SITE_BACKEND_HOST || 'http://localhost:3005/api';
 
 // Helper function to get a cookie value
 export function getCookie(name: string): string | null {
@@ -29,10 +29,17 @@ export function getCookie(name: string): string | null {
   return cookieValue;
 }
 
+export interface CommonResponseType {
+  data: any;
+  message: string;
+  status: number;
+  error?: string;
+}
+
 // Helper function to build headers
 export function buildHeaders(
-  authorize: boolean = false,
-  extraHeaders: Record<string, string> = {}
+  extraHeaders: Record<string, string> = {},
+  token?: string
 ): HeadersInit {
   const headers: HeadersInit = {
     Pragma: 'no-cache',
@@ -40,20 +47,20 @@ export function buildHeaders(
     'Client-Timezone-Name': moment.tz.guess()
   };
 
-  if (authorize) {
-    const token = JSON.parse(localStorage.getItem('token') || '{}');
-    headers['Authorization'] = `Bearer ${token?.accessToken}`;
+  if (token && token !== '') {
+    // const token = JSON.parse(localStorage.getItem('token') || '{}');
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   return { ...headers, ...extraHeaders };
 }
 
 // GET request
-export async function get<T>(
+export async function get(
   uri: string,
   params: Record<string, any> = {},
   options: RequestInit = {}
-): Promise<T> {
+): Promise<CommonResponseType> {
   const url = new URL(`${host}${uri}`);
   Object.keys(params).forEach((key) =>
     url.searchParams.append(key, params[key])
@@ -65,34 +72,63 @@ export async function get<T>(
     ...options
   });
 
-  return response.json();
+  const responseData = await response.json(); // Parse the response JSON
+
+  if (!response.ok) {
+    // Return the full response object with status and message
+    return {
+      status: response.status,
+      message: responseData.message || 'An error occurred',
+      data: null
+    };
+  }
+
+  // Return the full response object for successful requests
+  return {
+    status: response.status,
+    message: responseData.message || 'Request successful',
+    data: responseData.data
+  };
 }
 
 // POST request
-export async function post<T>(
+export async function post(
   uri: string,
   body: Record<string, any> = {}
-): Promise<T> {
+): Promise<CommonResponseType> {
   const response = await fetch(`${host}${uri}`, {
     method: 'POST',
-    headers: buildHeaders(false, {
+    headers: buildHeaders({
       'X-CSRFToken': getCookie('csrftoken') || ''
     }),
     body: JSON.stringify(body)
   });
 
+  const responseData = await response.json(); // Parse the response JSON
+
   if (!response.ok) {
-    throw new Error(`POST request failed: ${response.statusText}`);
+    // Return the full response object with status and message
+    return {
+      status: response.status,
+      message: responseData.message || 'An error occurred',
+      data: null
+    };
   }
 
-  return response.json();
+  // Return the full response object for successful requests
+  return {
+    status: response.status,
+    message: responseData.message || 'Request successful',
+    data: responseData.data
+  };
 }
 
 // Authorized GET request
-export async function authorizedGet<T>(
+export async function authorizedGet(
   uri: string,
+  token: string,
   params: Record<string, any> = {}
-): Promise<T> {
+): Promise<CommonResponseType> {
   const url = new URL(`${host}${uri}`);
   Object.keys(params).forEach((key) =>
     url.searchParams.append(key, params[key])
@@ -100,22 +136,35 @@ export async function authorizedGet<T>(
 
   const response = await fetch(url.toString(), {
     method: 'GET',
-    headers: buildHeaders(true)
+    headers: buildHeaders({}, token)
   });
 
+  const responseData = await response.json(); // Parse the response JSON
+
   if (!response.ok) {
-    throw new Error(`Authorized GET request failed: ${response.statusText}`);
+    // Return the full response object with status and message
+    return {
+      status: response.status,
+      message: responseData.message || 'An error occurred',
+      data: null
+    };
   }
 
-  return response.json();
+  // Return the full response object for successful requests
+  return {
+    status: response.status,
+    message: responseData.message || 'Request successful',
+    data: responseData.data
+  };
 }
 
 // Authorized POST request
-export async function authorizedPost<T>(
+export async function authorizedPost(
   uri: string,
+  token: string,
   body: Record<string, any> = {},
   params: Record<string, any> = {}
-): Promise<T> {
+): Promise<CommonResponseType> {
   const url = new URL(`${host}${uri}`);
   Object.keys(params).forEach((key) =>
     url.searchParams.append(key, params[key])
@@ -123,22 +172,38 @@ export async function authorizedPost<T>(
 
   const response = await fetch(url.toString(), {
     method: 'POST',
-    headers: buildHeaders(true, {
-      'X-CSRFToken': getCookie('csrftoken') || ''
-    }),
+    headers: buildHeaders(
+      {
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      },
+      token
+    ),
     body: JSON.stringify(body)
   });
 
+  const responseData = await response.json(); // Parse the response JSON
+
   if (!response.ok) {
-    throw new Error(`Authorized POST request failed: ${response.statusText}`);
+    // Return the full response object with status and message
+    return {
+      status: response.status,
+      message: responseData.message || 'An error occurred',
+      data: null
+    };
   }
 
-  return response.json();
+  // Return the full response object for successful requests
+  return {
+    status: response.status,
+    message: responseData.message || 'Request successful',
+    data: responseData.data
+  };
 }
 
 // Authorized DELETE request
 export async function authorizedDelete<T>(
   uri: string,
+  token: string,
   params: Record<string, any> = {}
 ): Promise<T> {
   const url = new URL(`${host}${uri}`);
@@ -148,9 +213,12 @@ export async function authorizedDelete<T>(
 
   const response = await fetch(url.toString(), {
     method: 'DELETE',
-    headers: buildHeaders(true, {
-      'X-CSRFToken': getCookie('csrftoken') || ''
-    })
+    headers: buildHeaders(
+      {
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      },
+      token
+    )
   });
 
   if (!response.ok) {
@@ -163,6 +231,7 @@ export async function authorizedDelete<T>(
 // Authorized PATCH request
 export async function authorizedPatch<T>(
   uri: string,
+  token: string,
   body: Record<string, any> = {},
   params: Record<string, any> = {}
 ): Promise<T> {
@@ -173,9 +242,12 @@ export async function authorizedPatch<T>(
 
   const response = await fetch(url.toString(), {
     method: 'PATCH',
-    headers: buildHeaders(true, {
-      'X-CSRFToken': getCookie('csrftoken') || ''
-    }),
+    headers: buildHeaders(
+      {
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      },
+      token
+    ),
     body: JSON.stringify(body)
   });
 
@@ -189,6 +261,7 @@ export async function authorizedPatch<T>(
 // Authorized POST request for file upload
 export async function authorizedPostUpload<T>(
   uri: string,
+  token: string,
   body: FormData,
   params: Record<string, any> = {}
 ): Promise<T> {
@@ -199,9 +272,12 @@ export async function authorizedPostUpload<T>(
 
   const response = await fetch(url.toString(), {
     method: 'POST',
-    headers: buildHeaders(true, {
-      'X-CSRFToken': getCookie('csrftoken') || ''
-    }),
+    headers: buildHeaders(
+      {
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      },
+      token
+    ),
     body
   });
 
@@ -217,6 +293,7 @@ export async function authorizedPostUpload<T>(
 // Authorized PATCH request for file upload
 export async function authorizedPatchUpload<T>(
   uri: string,
+  token: string,
   body: FormData,
   params: Record<string, any> = {}
 ): Promise<T> {
@@ -227,9 +304,12 @@ export async function authorizedPatchUpload<T>(
 
   const response = await fetch(url.toString(), {
     method: 'PATCH',
-    headers: buildHeaders(true, {
-      'X-CSRFToken': getCookie('csrftoken') || ''
-    }),
+    headers: buildHeaders(
+      {
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      },
+      token
+    ),
     body
   });
 
@@ -245,12 +325,13 @@ export async function authorizedPatchUpload<T>(
 // Authorized file download
 export async function authorizedFileDownload(
   uri: string,
+  token: string,
   fileType: string = 'text/csv,charset=UTF-8',
   fileName: string = 'export'
 ): Promise<void> {
   const response = await fetch(`${host}${uri}`, {
     method: 'GET',
-    headers: buildHeaders(true)
+    headers: buildHeaders({}, token)
   });
 
   if (!response.ok) {

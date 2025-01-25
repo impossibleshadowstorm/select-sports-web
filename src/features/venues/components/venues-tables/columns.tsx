@@ -12,10 +12,18 @@ export const columns: ColumnDef<Venue>[] = [
     accessorKey: 'description',
     header: 'Description'
   },
-  // {
-  //   accessorKey: 'price',
-  //   header: 'PRICE'
-  // },
+  {
+    accessorKey: 'address.city',
+    header: 'CITY'
+  },
+  {
+    accessorKey: 'address.postalCode',
+    header: 'ZIP'
+  },
+  {
+    accessorKey: 'address.state',
+    header: 'STATE'
+  },
   {
     id: 'actions',
     header: 'Actions',

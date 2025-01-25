@@ -20,9 +20,15 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { authorizedPost } from '@/lib/api-client';
+import { FirstLetterCaps } from '@/lib/utils/string-utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Venue } from '@prisma/client';
+import { AvailableStates, Sport } from '@prisma/client';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import * as z from 'zod';
 
 const MAX_FILE_SIZE = 5000000;
@@ -33,10 +39,12 @@ const ACCEPTED_IMAGE_TYPES = [
   'image/webp'
 ];
 
+// Validation Schema
 const formSchema = z.object({
+  name: z.string().min(5, 'Venue name must be at least 5 characters.'),
   images: z
     .any()
-    .refine((files) => files?.length == 1, 'Image is required.')
+    .refine((files) => files?.length > 2, 'At least 3 Images are required.')
     .refine(
       (files) => files?.[0]?.size <= MAX_FILE_SIZE,
       `Max file size is 5MB.`
@@ -45,25 +53,46 @@ const formSchema = z.object({
       (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
       '.jpg, .jpeg, .png and .webp files are accepted.'
     ),
-  name: z.string().min(2, {
-    message: 'Product name must be at least 2 characters.'
+  description: z
+    .string()
+    .min(10, 'Description is required and must be at least 10 characters.'),
+  state: z.string().min(1, 'State is required.'),
+  address: z.object({
+    street: z.string().min(1, 'Street is required.'),
+    city: z.string().min(1, 'City is required.'),
+    postalCode: z
+      .string()
+      .length(6, 'Postal code must be exactly 6 digits.')
+      .regex(/^\d{6}$/, 'Postal code must be numeric.')
   }),
-  description: z.string().min(10, {
-    message: 'Description must be at least 10 characters.'
-  })
+  sports: z.array(z.string()).min(1, 'At least one sport must be selected.')
 });
 
 export default function VenueForm({
   initialData,
+  availableSports,
   pageTitle
 }: {
-  initialData: Venue | null;
+  availableSports: Sport[] | [];
+  initialData: any | null;
   pageTitle: string;
 }) {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [loading, startTransition] = useTransition();
+
   const defaultValues = {
     name: initialData?.name || '',
-    images: initialData?.images || '',
-    description: initialData?.description || ''
+    images: initialData?.images || [],
+    description: initialData?.description || '',
+    address: {
+      street: initialData?.address?.street || '',
+      city: initialData?.address?.city || '',
+      // state: initialData?.address?.state || "",
+      postalCode: initialData?.address?.postalCode || ''
+    },
+    state: initialData?.address?.state || '',
+    sports: initialData?.sports?.map((sport: Sport) => sport.id) || []
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -71,8 +100,32 @@ export default function VenueForm({
     values: defaultValues
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const body = {
+      ...values,
+      images: values.images.map((image: File) => image.name),
+      address: { ...values.address, state: values.state }
+    };
+
+    startTransition(async () => {
+      try {
+        const response: any = await authorizedPost(
+          '/admin/venues/',
+          session?.user?.id!,
+          body
+        );
+
+        if (response.status === 201) {
+          toast.success(response.message);
+          form.reset(defaultValues);
+          router.push('/dashboard/venues');
+        } else {
+          toast.error(response.message);
+        }
+      } catch (error) {
+        toast.error('An error occurred. Please try again.');
+      }
+    });
   }
 
   return (
@@ -98,7 +151,7 @@ export default function VenueForm({
                         onValueChange={field.onChange}
                         maxFiles={4}
                         maxSize={4 * 1024 * 1024}
-                        // disabled={loading}
+                        disabled={loading}
                         // progresses={progresses}
                         // pass the onUpload function here for direct upload
                         // onUpload={uploadFiles}
@@ -117,9 +170,14 @@ export default function VenueForm({
                 name='name'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Name</FormLabel>
+                    <FormLabel>Venue Name</FormLabel>
                     <FormControl>
-                      <Input placeholder='Enter product name' {...field} />
+                      <Input
+                        type='text'
+                        placeholder='Enter Venue Name'
+                        disabled={loading}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,27 +185,102 @@ export default function VenueForm({
               />
               <FormField
                 control={form.control}
-                name='description'
+                name='sports'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>Sport Name</FormLabel>
                     <Select
-                      onValueChange={(value) => field.onChange(value)}
+                      onValueChange={(value) => {
+                        const currentSports = field.value || [];
+                        const updatedSports = [...currentSports, value];
+                        form.setValue('sports', updatedSports);
+                      }}
                       value={field.value[field.value.length - 1]}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder='Select categories' />
+                          <SelectValue placeholder='Select Sport' />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value='beauty'>Beauty Products</SelectItem>
-                        <SelectItem value='electronics'>Electronics</SelectItem>
-                        <SelectItem value='clothing'>Clothing</SelectItem>
-                        <SelectItem value='home'>Home & Garden</SelectItem>
-                        <SelectItem value='sports'>
-                          Sports & Outdoors
-                        </SelectItem>
+                        {Object.values(availableSports).map((sport, index) => (
+                          <SelectItem key={sport.name + index} value={sport.id}>
+                            {FirstLetterCaps(sport.name ?? '')}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+              <FormField
+                control={form.control}
+                name='address.street'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='text-gray-500'>
+                      Venue Address
+                    </FormLabel>
+                    <br />
+                    <FormLabel>Street</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='text'
+                        placeholder='Enter street'
+                        disabled={loading}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='address.city'
+                render={({ field }) => (
+                  <FormItem>
+                    <br />
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='text'
+                        placeholder='Enter City'
+                        disabled={loading}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* State Name */}
+              <FormField
+                control={form.control}
+                name='state'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>State Name</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        if (value !== '') form.setValue(field.name, value);
+                      }}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select State' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(AvailableStates).map((state, index) => (
+                          <SelectItem key={state + index} value={state}>
+                            {FirstLetterCaps(state)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -156,15 +289,15 @@ export default function VenueForm({
               />
               <FormField
                 control={form.control}
-                name='name'
+                name='address.postalCode'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price</FormLabel>
+                    <FormLabel>Postal Code</FormLabel>
                     <FormControl>
                       <Input
-                        type='number'
-                        step='0.01'
-                        placeholder='Enter price'
+                        type='text'
+                        placeholder='Enter postal code'
+                        disabled={loading}
                         {...field}
                       />
                     </FormControl>
@@ -181,7 +314,8 @@ export default function VenueForm({
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder='Enter product description'
+                      disabled={loading}
+                      placeholder='Enter venue description'
                       className='resize-none'
                       {...field}
                     />
@@ -190,7 +324,9 @@ export default function VenueForm({
                 </FormItem>
               )}
             />
-            <Button type='submit'>Add Product</Button>
+            <Button type='submit' disabled={loading}>
+              Add Venue
+            </Button>
           </form>
         </Form>
       </CardContent>

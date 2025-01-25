@@ -39,14 +39,9 @@ const authConfig = {
             return null;
           }
 
-          const user = await res.json();
+          const response = await res.json();
 
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-          };
+          return { ...response.data, id: response.data.token };
         } catch (error) {
           // eslint-disable-line
           return null;
@@ -60,14 +55,15 @@ const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.email;
+        token.token = user.id;
       }
+
       return token;
     },
     async session({ session, token }) {
       // Add user role to the session
-      if (token.email) {
-        session.user.email = token.email;
+      if (token.token) {
+        session.user.id = token.sub || '';
       }
       return session;
     }

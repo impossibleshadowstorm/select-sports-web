@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation';
 import VenueForm from './venue-form';
 import { get } from '@/lib/api-client';
-import { Venue } from '@prisma/client';
-// import { Venue } from "@prisma/client";
 
 type TVenueViewPageProps = {
   venueId: string;
@@ -10,10 +8,12 @@ type TVenueViewPageProps = {
 
 export default async function VenueViewPage({ venueId }: TVenueViewPageProps) {
   let venue = null;
-  let pageTitle = 'Create New Product';
+  let pageTitle = 'Create New Venue';
+
+  const { data: availableSports } = await get(`/sports`);
 
   if (venueId !== 'new') {
-    const response = await get<{ data: Venue }>(`/venues/${venueId}`);
+    const response = await get(`/venues/${venueId}`);
     venue = response.data;
     if (!venue) {
       notFound();
@@ -21,5 +21,11 @@ export default async function VenueViewPage({ venueId }: TVenueViewPageProps) {
     pageTitle = `Edit Venue`;
   }
 
-  return <VenueForm initialData={venue} pageTitle={pageTitle} />;
+  return (
+    <VenueForm
+      initialData={venue}
+      availableSports={availableSports}
+      pageTitle={pageTitle}
+    />
+  );
 }

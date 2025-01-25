@@ -20,7 +20,7 @@ export default async function SportListingPage({}: SportListingPage) {
     ...(categories && { categories: categories })
   };
 
-  const response = await get<{ data: Sport[] }>('/sports/');
+  const response = await get('/sports/');
   const sports: Sport[] = response.data;
 
   return (

@@ -1,8 +1,8 @@
-import prisma from "@/lib/utils/prisma-client";
-import bcrypt from "bcryptjs";
-import { validateRequiredFields } from "@/lib/utils/validator";
-import { signToken } from "@/lib/utils/jwt-config";
-import { NextResponse } from "next/server";
+import prisma from '@/lib/utils/prisma-client';
+import bcrypt from 'bcryptjs';
+import { validateRequiredFields } from '@/lib/utils/validator';
+import { signToken } from '@/lib/utils/jwt-config';
+import { NextResponse } from 'next/server';
 
 // Define the shape of the request body
 interface LoginRequestBody {
@@ -22,15 +22,18 @@ export async function POST(req: Request): Promise<NextResponse<LoginResponse>> {
   const { email, password } = body;
 
   // Define required fields
-  const requiredFields = ["email", "password"];
+  const requiredFields = ['email', 'password'];
 
   // Validate fields
-  const { isValid, missingFields } = validateRequiredFields(body, requiredFields);
+  const { isValid, missingFields } = validateRequiredFields(
+    body,
+    requiredFields
+  );
 
   if (!isValid) {
     return NextResponse.json(
       {
-        message: `The following fields are missing: ${missingFields.join(", ")}`,
+        message: `The following fields are missing: ${missingFields.join(', ')}`
       },
       { status: 400 }
     );
@@ -39,13 +42,13 @@ export async function POST(req: Request): Promise<NextResponse<LoginResponse>> {
   try {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
+      return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return NextResponse.json(
-        { message: "Invalid credentials" },
+        { message: 'Invalid credentials' },
         { status: 401 }
       );
     }
@@ -53,16 +56,19 @@ export async function POST(req: Request): Promise<NextResponse<LoginResponse>> {
     const token = signToken({
       userId: user.id,
       userName: user.name,
-      role: user.role,
+      role: user.role
     });
 
     return NextResponse.json(
-      { message: "Login successful", data: token },
+      {
+        message: 'Login successful',
+        data: { token }
+      },
       { status: 200 }
     );
   } catch (error: any) {
     return NextResponse.json(
-      { message: "Internal Server Error", error: `Error: ${error.message}` },
+      { message: 'Internal Server Error', error: `Error: ${error.message}` },
       { status: 500 }
     );
   }

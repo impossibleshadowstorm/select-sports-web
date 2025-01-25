@@ -4,7 +4,7 @@ import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import SportListingPage from '@/features/sport/components/sport-listing';
-import SportTableAction from '@/features/sport/components/sport-tables/product-table-action';
+import SportTableAction from '@/features/sport/components/sport-tables/sport-table-action';
 import { searchParamsCache, serialize } from '@/lib/searchparams';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';

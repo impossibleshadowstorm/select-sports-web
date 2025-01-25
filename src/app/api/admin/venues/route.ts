@@ -9,6 +9,7 @@ interface VenueRequestBody {
   name: string;
   address: Address;
   sports: string[];
+  images: string[];
   description: string;
 }
 
@@ -120,12 +121,13 @@ interface VenueRequestBody {
 
 export async function POST(req: Request) {
   return await authenticateAdmin(req, async () => {
-    const { name, address, sports, description }: VenueRequestBody =
+    const { name, address, sports, description, images }: VenueRequestBody =
       await req.json();
 
     // Define required fields for Venue and Address validation
     const requiredFields = [
       'name',
+      'images',
       'description',
       'address.street',
       'address.city',
@@ -136,7 +138,7 @@ export async function POST(req: Request) {
 
     // Validate all fields (including nested address fields)
     const { isValid, missingFields } = validateRequiredFields(
-      { name, address, sports, description },
+      { name, address, sports, images, description },
       requiredFields
     );
 
@@ -173,6 +175,7 @@ export async function POST(req: Request) {
           address: {
             create: address
           },
+          images,
           sports: {
             connect: sports.map((id) => ({ id: id }))
           },
