@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   return await authenticate(req, async () => {
     const body: SportsProfileRequestBody = await req.json();
-    const { userId } = req.user;
+    const { userId } = req.user as { userId: string };
 
     // Define required fields
     const requiredFields = [
@@ -114,27 +114,53 @@ export async function PATCH(req: Request) {
   return await authenticate(req, async () => {
     const body = await req.json();
     const { userId } = req.user;
-    try {
-      const updateData = {
-        ...(body.skillLevel && { skillLevel: body.skillLevel }),
-        ...(body.preferredPosition && {
-          preferredPosition: body.preferredPosition
-        }),
-        ...(body.strengths && { strength: body.strengths }),
-        ...(body.weaknesses && { weakness: body.weaknesses }),
-        ...(body.preferredFoot && { preferredFoot: body.preferredFoot }),
-        ...(body.favoriteNumber && { favoriteNumber: body.favoriteNumber }),
-        ...(body.favoritePlayer && { favoritePlayer: body.favoritePlayer }),
-        ...(body.favoriteClub && { favoriteClub: body.favoriteClub })
-      };
 
-      // Ensure there is at least one field to update
-      if (Object.keys(updateData).length === 0) {
+    // Define the fields to update
+    const updateFields = [
+      'skillLevel',
+      'preferredPosition',
+      'strength',
+      'weakness',
+      'preferredFoot',
+      'favoriteNumber',
+      'favoritePlayer',
+      'favoriteClub'
+    ];
+
+    // Validate if any fields are present for updating
+    const fieldsToUpdate = updateFields.filter(
+      (field) => body[field] !== undefined
+    );
+
+    if (fieldsToUpdate.length === 0) {
+      return NextResponse.json(
+        {
+          message: 'No valid fields provided for update.'
+        },
+        { status: 400 }
+      );
+    }
+
+    try {
+      // Check if the sports profile exists for the user
+      const existingProfile = await prisma.sportsProfile.findUnique({
+        where: { userId: userId }
+      });
+
+      if (!existingProfile) {
         return NextResponse.json(
-          { message: 'No valid fields provided for update.' },
-          { status: 400 }
+          { message: 'Sports profile not found.' },
+          { status: 404 }
         );
       }
+
+      // Prepare the update data
+      const updateData = {
+        ...fieldsToUpdate.reduce((acc, field) => {
+          if (body[field]) acc[field] = body[field];
+          return acc;
+        }, {})
+      };
 
       const updatedProfile = await prisma.sportsProfile.update({
         where: { userId: userId },
