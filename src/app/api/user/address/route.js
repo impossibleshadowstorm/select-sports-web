@@ -1,7 +1,7 @@
-import { authenticate } from "../../../../middlewares/auth";
-import { NextResponse } from "next/server";
-import { AvailableStates } from "@prisma/client";
-import { validateRequiredFields } from "../../../../utils/validator";
+import { authenticate } from '../../../../middlewares/auth';
+import { NextResponse } from 'next/server';
+import { AvailableStates } from '@prisma/client';
+import { validateRequiredFields } from '@/lib/utils/validator';
 
 export async function POST(req) {
   return await authenticate(req, async () => {
@@ -10,7 +10,7 @@ export async function POST(req) {
       const body = await req.json();
 
       // Define required fields
-      const requiredFields = ["street", "city", "state", "postalCode"];
+      const requiredFields = ['street', 'city', 'state', 'postalCode'];
 
       // Validate fields
       const { isValid, missingFields } = validateRequiredFields(
@@ -22,8 +22,8 @@ export async function POST(req) {
         return NextResponse.json(
           {
             error: `The following fields are missing: ${missingFields.join(
-              ", "
-            )} while adding address to Profile.`,
+              ', '
+            )} while adding address to Profile.`
           },
           { status: 400 }
         );
@@ -35,7 +35,7 @@ export async function POST(req) {
           {
             message: `Invalid state. Allowed states are: ${Object.values(
               AvailableStates
-            ).join(", ")}`,
+            ).join(', ')}`
           },
           { status: 400 }
         );
@@ -44,12 +44,12 @@ export async function POST(req) {
       // Check if the user already has an address
       const userWithAddress = await prisma.user.findUnique({
         where: { id: userId },
-        select: { addressId: true },
+        select: { addressId: true }
       });
 
       if (userWithAddress?.addressId) {
         return NextResponse.json(
-          { message: "Address already exists. Use PATCH to update it." },
+          { message: 'Address already exists. Use PATCH to update it.' },
           { status: 400 }
         );
       }
@@ -58,25 +58,25 @@ export async function POST(req) {
       const address = await prisma.address.create({
         data: {
           ...body,
-          User: { connect: { id: userId } },
-        },
+          User: { connect: { id: userId } }
+        }
       });
 
       // Update the user's `addressId`
       await prisma.user.update({
         where: { id: userId },
-        data: { addressId: address.id },
+        data: { addressId: address.id }
       });
 
       return NextResponse.json(
-        { message: "Address added successfully.", data: { ...address } },
+        { message: 'Address added successfully.', data: { ...address } },
         { status: 201 }
       );
     } catch (error) {
       return NextResponse.json(
         {
-          message: "Failed to add the address.",
-          error: `Error: ${error.message}`,
+          message: 'Failed to add the address.',
+          error: `Error: ${error.message}`
         },
         { status: 500 }
       );
@@ -96,7 +96,7 @@ export async function PATCH(req) {
         return NextResponse.json(
           {
             message:
-              "At least one field (street, city, state, or postalCode) must be provided.",
+              'At least one field (street, city, state, or postalCode) must be provided.'
           },
           { status: 400 }
         );
@@ -108,7 +108,7 @@ export async function PATCH(req) {
           {
             message: `Invalid state. Allowed states are: ${Object.values(
               AvailableStates
-            ).join(", ")}`,
+            ).join(', ')}`
           },
           { status: 400 }
         );
@@ -117,12 +117,12 @@ export async function PATCH(req) {
       // Check if the user already has an address
       const userWithAddress = await prisma.user.findUnique({
         where: { id: userId },
-        select: { addressId: true },
+        select: { addressId: true }
       });
 
       if (!userWithAddress?.addressId) {
         return NextResponse.json(
-          { message: "No address found. Use POST to create one." },
+          { message: 'No address found. Use POST to create one.' },
           { status: 400 }
         );
       }
@@ -137,18 +137,18 @@ export async function PATCH(req) {
       // Update the existing address
       const address = await prisma.address.update({
         where: { id: userWithAddress.addressId },
-        data: updateData,
+        data: updateData
       });
 
       return NextResponse.json(
-        { message: "Address updated successfully.", data: { ...address } },
+        { message: 'Address updated successfully.', data: { ...address } },
         { status: 200 }
       );
     } catch (error) {
       return NextResponse.json(
         {
-          message: "Failed to update the address.",
-          error: `Error: ${error.message}`,
+          message: 'Failed to update the address.',
+          error: `Error: ${error.message}`
         },
         { status: 500 }
       );
