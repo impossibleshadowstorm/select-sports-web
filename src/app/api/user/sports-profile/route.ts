@@ -1,7 +1,7 @@
 import { authenticate } from '@/middlewares/auth';
 import prisma from '@/lib/utils/prisma-client';
 import { NextResponse } from 'next/server';
-import { User } from 'next-auth';
+import { validateRequiredFields } from '@/lib/utils/validator';
 
 interface SportsProfileRequestBody {
   skillLevel: string;
@@ -17,8 +17,9 @@ interface SportsProfileRequestBody {
 export async function GET(req: Request) {
   return await authenticate(req, async () => {
     try {
-      const { userId } = req.user;
-      const sportsProfile = await prisma.sportsProfile.findUnique({
+      const { userId } = req.user as { userId: string };
+
+      const sportsProfile = await prisma.SportsProfile.findUnique({
         where: { userId: userId }
       });
 
@@ -43,28 +44,32 @@ export async function POST(req: Request) {
   return await authenticate(req, async () => {
     const body: SportsProfileRequestBody = await req.json();
     const { userId } = req.user;
-    try {
-      // Validate required fields
-      const {
-        skillLevel,
-        preferredPosition,
-        strength,
-        weakness,
-        preferredFoot
-      } = body;
-      if (
-        !skillLevel ||
-        !preferredPosition ||
-        !strength ||
-        !weakness ||
-        !preferredFoot
-      ) {
-        return NextResponse.json(
-          { message: 'Missing required fields.' },
-          { status: 400 }
-        );
-      }
 
+    // Define required fields
+    const requiredFields = [
+      'skillLevel',
+      'preferredPosition',
+      'strength',
+      'weakness',
+      'preferredFoot'
+    ];
+
+    // Validate fields
+    const { isValid, missingFields } = validateRequiredFields(
+      body,
+      requiredFields
+    );
+
+    if (!isValid) {
+      return NextResponse.json(
+        {
+          message: `The following fields are missing: ${missingFields.join(', ')}`
+        },
+        { status: 400 }
+      );
+    }
+
+    try {
       // Check if the user already has a sports profile
       const existingProfile = await prisma.sportsProfile.findUnique({
         where: { userId: userId }
@@ -72,7 +77,7 @@ export async function POST(req: Request) {
 
       if (existingProfile) {
         return NextResponse.json(
-          { message: 'Sports profile already exists. Use PATCH to update.' },
+          { message: 'Sports profile already exists.' },
           { status: 400 }
         );
       }
@@ -80,7 +85,12 @@ export async function POST(req: Request) {
       const sportsProfile = await prisma.sportsProfile.create({
         data: {
           ...body,
-          userId: userId
+          user: {
+            connect: {
+              id: userId
+            }
+          }
+          // userId: userId
         }
       });
 

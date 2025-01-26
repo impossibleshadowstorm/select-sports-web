@@ -19,6 +19,15 @@ CREATE TYPE "AvailableSports" AS ENUM ('FOOTBALL');
 -- CreateEnum
 CREATE TYPE "AvailableStates" AS ENUM ('DELHI', 'GURGAON');
 
+-- CreateEnum
+CREATE TYPE "SkillLevel" AS ENUM ('BEGINNER', 'INTERMEDIATE', 'PROFESSIONAL');
+
+-- CreateEnum
+CREATE TYPE "PreferredFoot" AS ENUM ('RIGHT', 'LEFT');
+
+-- CreateEnum
+CREATE TYPE "PreferredPosition" AS ENUM ('GOALKEEPER', 'DEFENDER', 'MIDFIELDER', 'ATTACKER');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" UUID NOT NULL,
@@ -52,6 +61,24 @@ CREATE TABLE "Address" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Address_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SportsProfile" (
+    "id" UUID NOT NULL,
+    "skillLevel" "SkillLevel" NOT NULL,
+    "preferredPosition" "PreferredPosition" NOT NULL,
+    "strength" TEXT,
+    "weakness" TEXT,
+    "preferredFoot" "PreferredFoot" NOT NULL,
+    "favoriteNumber" INTEGER,
+    "favoritePlayer" TEXT,
+    "favoriteClub" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" UUID NOT NULL,
+
+    CONSTRAINT "SportsProfile_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -137,6 +164,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "User_addressId_key" ON "User"("addressId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "SportsProfile_userId_key" ON "SportsProfile"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Venue_addressId_key" ON "Venue"("addressId");
 
 -- CreateIndex
@@ -153,6 +183,9 @@ CREATE INDEX "_SportToVenue_B_index" ON "_SportToVenue"("B");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_addressId_fkey" FOREIGN KEY ("addressId") REFERENCES "Address"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SportsProfile" ADD CONSTRAINT "SportsProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Venue" ADD CONSTRAINT "Venue_addressId_fkey" FOREIGN KEY ("addressId") REFERENCES "Address"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

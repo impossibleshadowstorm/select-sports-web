@@ -3,19 +3,19 @@ import VenueForm from './venue-form';
 import { get } from '@/lib/api-client';
 
 type TVenueViewPageProps = {
-  slotId: string;
+  venueId: string;
 };
 
-export default async function VenueViewPage({ slotId }: TVenueViewPageProps) {
-  let slot = null;
+export default async function VenueViewPage({ venueId }: TVenueViewPageProps) {
+  let venue = null;
   let pageTitle = 'Create New Venue';
 
   const { data: availableSports } = await get(`/sports`);
 
-  if (slotId !== 'new') {
-    const response = await get(`/venues/${slotId}`);
-    slot = response.data;
-    if (!slot) {
+  if (venueId !== 'new') {
+    const response = await get(`/venues/${venueId}`);
+    venue = response.data;
+    if (!venue) {
       notFound();
     }
     pageTitle = `Edit Venue`;
@@ -23,7 +23,7 @@ export default async function VenueViewPage({ slotId }: TVenueViewPageProps) {
 
   return (
     <VenueForm
-      initialData={slot}
+      initialData={venue}
       availableSports={availableSports}
       pageTitle={pageTitle}
     />
