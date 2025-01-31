@@ -42,12 +42,15 @@ enum AvailableSports {
 
 enum AvailableStates {
   DELHI
+  DELHI_NCR
   GURGAON
 }
 
 enum SkillLevel {
   BEGINNER
+  ACADEMY
   INTERMEDIATE
+  SEMI_PRO
   PROFESSIONAL
 }
 
@@ -58,9 +61,34 @@ enum PreferredFoot {
 
 enum PreferredPosition {
   GOALKEEPER
-  DEFENDER
-  MIDFIELDER
-  ATTACKER
+  DEFENDER_RIGHT_CENTER_BACK
+  DEFENDER_LEFT_CENTER_BACK
+  DEFENDER_RIGHT_FULL_BACK
+  DEFENDER_LEFT_FULL_BACK
+  DEFENSIVE_MIDFIELDER
+  RIGHT_ATTACKING_MIDFIELDER
+  LEFT_ATTACKING_MIDFIELDER
+  STRIKER
+  RIGHT_WINGER
+  LEFT_WINGER
+}
+
+enum VenueAmenities {
+  DRINKING_WATER
+  WALKING_TRACK
+  WASHROOM
+  WARM_UP_AREA
+  COACHING_AVAILABLE
+  PARKING
+  BALL_BOY
+  ARTIFICIAL_TURF
+  LOCKER_ROOM
+  CAFE
+  SITTING_AREA
+  SHOWERS
+  SOUND_SYSTEM
+  WIFI
+  FLOOD_LIGHTS
 }
 
 model User {
@@ -122,6 +150,7 @@ model Venue {
   updatedAt   DateTime @updatedAt
   images      String[]
   description String
+  amenities VenueAmenities[]
 
   address   Address @relation(fields: [addressId], references: [id])
   addressId String  @unique @db.Uuid
