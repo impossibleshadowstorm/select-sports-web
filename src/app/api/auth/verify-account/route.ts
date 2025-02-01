@@ -1,6 +1,7 @@
-import prisma from "@/lib/utils/prisma-client";
-import { validateRequiredFields } from "@/lib/utils/validator";
-import { NextResponse } from "next/server";
+import prisma from '@/lib/utils/prisma-client';
+import { validateRequiredFields } from '@/lib/utils/validator';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 // Type definitions
 interface VerifyAccountRequestBody {
@@ -13,20 +14,23 @@ interface ResponseMessage {
   error?: string;
 }
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   const body: VerifyAccountRequestBody = await req.json();
   const { email, otp } = body;
 
   // Define required fields
-  const requiredFields = ["email", "otp"];
+  const requiredFields = ['email', 'otp'];
 
   // Validate fields
-  const { isValid, missingFields } = validateRequiredFields(body, requiredFields);
+  const { isValid, missingFields } = validateRequiredFields(
+    body,
+    requiredFields
+  );
 
   if (!isValid) {
     return NextResponse.json<ResponseMessage>(
       {
-        message: `The following fields are missing: ${missingFields.join(", ")}`,
+        message: `The following fields are missing: ${missingFields.join(', ')}`
       },
       { status: 400 }
     );
@@ -35,9 +39,14 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || !user.otp || user.otp !== otp || user.otpExpiresAt! < new Date()) {
+    if (
+      !user ||
+      !user.otp ||
+      user.otp !== otp ||
+      user.otpExpiresAt! < new Date()
+    ) {
       return NextResponse.json<ResponseMessage>(
-        { message: "Invalid OTP or OTP expired" },
+        { message: 'Invalid OTP or OTP expired' },
         { status: 400 }
       );
     }
@@ -48,17 +57,17 @@ export async function POST(req: Request): Promise<NextResponse> {
       data: {
         isVerified: true,
         otp: null, // Clear OTP
-        otpExpiresAt: null, // Clear OTP expires
-      },
+        otpExpiresAt: null // Clear OTP expires
+      }
     });
 
     return NextResponse.json<ResponseMessage>(
-      { message: "Account verified successfully" },
+      { message: 'Account verified successfully' },
       { status: 200 }
     );
   } catch (error: any) {
     return NextResponse.json<ResponseMessage>(
-      { message: "Internal Server Error", error: `Error: ${error.message}` },
+      { message: 'Internal Server Error', error: `Error: ${error.message}` },
       { status: 500 }
     );
   }

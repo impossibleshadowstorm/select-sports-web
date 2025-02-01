@@ -63,7 +63,6 @@ export const validateRequiredFields = (
     if (
       value === undefined ||
       value === null ||
-      value === '' ||
       (Array.isArray(value) && value.length === 0)
     ) {
       missingFields.push(field);

@@ -1,36 +1,35 @@
-import { headers } from "next/headers";
-import { verifyToken } from "@/lib/utils/jwt-config";
-import prisma from "@/lib/utils/prisma-client";
-import { NextResponse } from "next/server";
-
-// Types for the Request and Next function
-interface Request {
-  user?: any; // To hold the decoded user info
-}
+import { headers } from 'next/headers';
+import { verifyToken } from '@/lib/utils/jwt-config';
+import prisma from '@/lib/utils/prisma-client';
+import { NextResponse } from 'next/server';
+import { AuthenticatedRequest } from '@/lib/utils/request-type';
 
 interface Next {
-  (): Promise<void>;
+  (): Promise<NextResponse>;
 }
 
 // Authenticate and check for admin role
-export const authenticateAdmin = async (req: Request, next: Next) => {
+export const authenticateAdmin = async (
+  req: AuthenticatedRequest,
+  next: Next
+) => {
   const requestHeader = await headers();
-  const token = requestHeader.get("Authorization");
+  const token = requestHeader.get('Authorization');
 
   if (!token) {
     return NextResponse.json(
-      { message: "Unauthorized, no token provided" },
+      { message: 'Unauthorized, no token provided' },
       { status: 401 }
     );
   }
 
   try {
     // Decode the token to get user information
-    const decoded = verifyToken(token.split(" ")[1]);
+    const decoded = verifyToken(token.split(' ')[1]);
 
     if (!decoded) {
       return NextResponse.json(
-        { message: "Unauthorized, invalid token" },
+        { message: 'Unauthorized, invalid token' },
         { status: 401 }
       );
     }
@@ -38,12 +37,12 @@ export const authenticateAdmin = async (req: Request, next: Next) => {
     // Fetch the user from the database to check their role
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { role: true }, // Only select the role field
+      select: { role: true } // Only select the role field
     });
 
-    if (!user || user.role !== "ADMIN") {
+    if (!user || user.role !== 'ADMIN') {
       return NextResponse.json(
-        { message: "Forbidden, Only Admin can perform this action!" },
+        { message: 'Forbidden, Only Admin can perform this action!' },
         { status: 403 }
       );
     }
@@ -53,30 +52,30 @@ export const authenticateAdmin = async (req: Request, next: Next) => {
   } catch (error: any) {
     return NextResponse.json(
       {
-        message: "Server error during authentication",
-        error: `Error: ${error.message}`,
+        message: 'Server error during authentication',
+        error: `Error: ${error.message}`
       },
       { status: 500 }
     );
   }
 };
 
-export const authenticate = async (req: Request, next: Next) => {
+export const authenticate = async (req: AuthenticatedRequest, next: Next) => {
   const requestHeader = await headers();
-  const token = requestHeader.get("Authorization");
+  const token = requestHeader.get('Authorization');
 
   if (!token) {
     return NextResponse.json(
-      { message: "Unauthorized, no token provided" },
+      { message: 'Unauthorized, no token provided' },
       { status: 401 }
     );
   }
 
   try {
-    const decoded = verifyToken(token.split(" ")[1]);
+    const decoded = verifyToken(token.split(' ')[1]);
     if (!decoded) {
       return NextResponse.json(
-        { message: "Unauthorized, invalid token" },
+        { message: 'Unauthorized, invalid token' },
         { status: 401 }
       );
     }
@@ -85,8 +84,8 @@ export const authenticate = async (req: Request, next: Next) => {
   } catch (error: any) {
     return NextResponse.json(
       {
-        message: "Unauthorized, invalid token",
-        error: `Error: ${error.message}`,
+        message: 'Unauthorized, invalid token',
+        error: `Error: ${error.message}`
       },
       { status: 401 }
     );

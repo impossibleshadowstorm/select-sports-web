@@ -1,16 +1,17 @@
 import { authenticateAdmin } from '@/middlewares/auth';
 import prisma from '@/lib/utils/prisma-client';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { AvailableSports } from '@prisma/client';
+import type { NextRequest } from 'next/server';
 
 // Define request body type
 interface SportRequestBody {
   name: AvailableSports;
-  rules: Record<string, any>; // Assuming rules is a JSON object
+  rules: any; // Assuming rules is a JSON object
   totalPlayer: number;
 }
 
-export async function POST(req: Request | NextRequest) {
+export async function POST(req: NextRequest | NextRequest) {
   return await authenticateAdmin(req, async () => {
     const { name, rules, totalPlayer }: SportRequestBody = await req.json();
 

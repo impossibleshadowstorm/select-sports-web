@@ -1,7 +1,8 @@
-import { authenticateAdmin } from "@/middlewares/auth";
-import prisma from "@/lib/utils/prisma-client";
-import { NextResponse } from "next/server";
-import { Address, Sport } from "@prisma/client";
+import { authenticateAdmin } from '@/middlewares/auth';
+import prisma from '@/lib/utils/prisma-client';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { Address, Sport } from '@prisma/client';
 
 interface VenueRequest {
   name?: string;
@@ -9,9 +10,10 @@ interface VenueRequest {
   sports?: Sport[];
 }
 
-export async function PATCH(req: Request, context: { params: { id: string } }){
+export async function PATCH(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
-    const { id } = await context.params; // Get the venue ID from the URL
+    // const { id } = await context.params; // Get the venue ID from the URL
+    const id = req.nextUrl.pathname.split('/').pop();
     const { name, address, sports }: VenueRequest = await req.json();
 
     const updateData: { [key: string]: any } = {};
@@ -41,14 +43,14 @@ export async function PATCH(req: Request, context: { params: { id: string } }){
     // Update sports if provided
     if (Array.isArray(sports)) {
       updateData.sports = {
-        connect: sports.map((sportId) => ({ id: sportId })), // Connect new sports
+        connect: sports.map((sportId) => ({ id: sportId })) // Connect new sports
       };
     }
 
     // Ensure there's something to update
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { error: "No valid fields provided for update." },
+        { error: 'No valid fields provided for update.' },
         { status: 400 }
       );
     }
@@ -60,19 +62,19 @@ export async function PATCH(req: Request, context: { params: { id: string } }){
         data: updateData,
         include: {
           address: true,
-          sports: true,
-        },
+          sports: true
+        }
       });
 
       return NextResponse.json(
-        { data: updatedVenue, message: "Venue data updated successfully" },
+        { data: updatedVenue, message: 'Venue data updated successfully' },
         { status: 200 }
       );
     } catch (error: any) {
       return NextResponse.json(
         {
           error: `Failed to update venue: ${error.message}`,
-          message: "Failed to Update Venue",
+          message: 'Failed to Update Venue'
         },
         { status: 500 }
       );
@@ -80,15 +82,16 @@ export async function PATCH(req: Request, context: { params: { id: string } }){
   });
 }
 
-export async function DELETE(req: Request, context: { params: { id: string } }){
+export async function DELETE(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
-    const { id } = await context.params;
+    // const { id } = await context.params;
+    const id = req.nextUrl.pathname.split('/').pop();
 
     try {
       // Fetch the venue to get its related address ID
       const venue = await prisma.venue.findUnique({
         where: { id },
-        select: { addressId: true },
+        select: { addressId: true }
       });
 
       if (!venue) {
@@ -100,17 +103,17 @@ export async function DELETE(req: Request, context: { params: { id: string } }){
 
       // Delete the venue
       await prisma.venue.delete({
-        where: { id },
+        where: { id }
       });
 
       // Delete the related address
       await prisma.address.delete({
-        where: { id: venue.addressId },
+        where: { id: venue.addressId }
       });
 
       return NextResponse.json(
         {
-          message: `Venue with ID ${id} and its related address deleted successfully.`,
+          message: `Venue with ID ${id} and its related address deleted successfully.`
         },
         { status: 200 }
       );
@@ -118,7 +121,7 @@ export async function DELETE(req: Request, context: { params: { id: string } }){
       return NextResponse.json(
         {
           message: `Failed to delete venue.`,
-          error: `Error: ${error.message}`,
+          error: `Error: ${error.message}`
         },
         { status: 500 }
       );

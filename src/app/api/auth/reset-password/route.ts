@@ -1,7 +1,8 @@
-import prisma from "@/lib/utils/prisma-client";
-import { validateRequiredFields } from "@/lib/utils/validator";
-import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+import prisma from '@/lib/utils/prisma-client';
+import { validateRequiredFields } from '@/lib/utils/validator';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import bcrypt from 'bcryptjs';
 
 // Type definitions
 interface ResetPasswordRequestBody {
@@ -15,12 +16,12 @@ interface ResetPasswordResponse {
   error?: string;
 }
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   const body: ResetPasswordRequestBody = await req.json();
   const { email, otp, newPassword } = body;
 
   // Define required fields
-  const requiredFields = ["email", "otp", "newPassword"];
+  const requiredFields = ['email', 'otp', 'newPassword'];
 
   // Validate fields
   const { isValid, missingFields } = validateRequiredFields(
@@ -29,34 +30,33 @@ export async function POST(req: Request): Promise<NextResponse> {
   );
 
   if (!isValid) {
-    return (
-      NextResponse.json <
-      ResetPasswordResponse >
-      ({
-        message: `The following fields are missing: ${missingFields.join(
-          ", "
-        )}`,
+    return NextResponse.json<ResetPasswordResponse>(
+      {
+        message: `The following fields are missing: ${missingFields.join(', ')}`
       },
-      { status: 400 })
+      { status: 400 }
     );
   }
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || user.otp !== otp || user.otpExpiresAt < new Date()) {
-      return (
-        NextResponse.json <
-        ResetPasswordResponse >
-        ({ message: "Invalid OTP or OTP expired" }, { status: 400 })
+    if (
+      !user ||
+      user.otp !== otp ||
+      !user.otpExpiresAt ||
+      user.otpExpiresAt < new Date()
+    ) {
+      return NextResponse.json<ResetPasswordResponse>(
+        { message: 'Invalid OTP or OTP expired' },
+        { status: 400 }
       );
     }
 
     if (!newPassword) {
-      return (
-        NextResponse.json <
-        ResetPasswordResponse >
-        ({ message: "New Password not provided!" }, { status: 400 })
+      return NextResponse.json<ResetPasswordResponse>(
+        { message: 'New Password not provided!' },
+        { status: 400 }
       );
     }
 
@@ -68,21 +68,18 @@ export async function POST(req: Request): Promise<NextResponse> {
       data: {
         password: hashedPassword,
         otp: null, // Clear OTP
-        otpExpiresAt: null,
-      },
+        otpExpiresAt: null
+      }
     });
 
-    return (
-      NextResponse.json <
-      ResetPasswordResponse >
-      ({ message: "Password reset successful" }, { status: 200 })
+    return NextResponse.json<ResetPasswordResponse>(
+      { message: 'Password reset successful' },
+      { status: 200 }
     );
-  } catch (error) {
-    return (
-      NextResponse.json <
-      ResetPasswordResponse >
-      ({ message: "Internal Server Error", error: `Error: ${error.message}` },
-      { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json<ResetPasswordResponse>(
+      { message: 'Internal Server Error', error: `Error: ${error.message}` },
+      { status: 500 }
     );
   }
 }

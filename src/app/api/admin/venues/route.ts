@@ -4,6 +4,7 @@ import { validateRequiredFields } from '@/lib/utils/validator';
 import { NextResponse } from 'next/server';
 import { AvailableStates } from '@prisma/client';
 import { Address } from '@prisma/client';
+import type { NextRequest } from 'next/server';
 
 interface VenueRequestBody {
   name: string;
@@ -119,7 +120,7 @@ interface VenueRequestBody {
 //   });
 // }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
     const { name, address, sports, description, images }: VenueRequestBody =
       await req.json();
@@ -191,7 +192,7 @@ export async function POST(req: Request) {
         { data: venue, message: 'Venue Added Successfully' },
         { status: 201 }
       );
-    } catch (error) {
+    } catch (error: any) {
       const isUniqueConstraintError = error.message.includes(
         'Unique constraint failed'
       );

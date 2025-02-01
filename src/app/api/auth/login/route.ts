@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { validateRequiredFields } from '@/lib/utils/validator';
 import { signToken } from '@/lib/utils/jwt-config';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 // Define the shape of the request body
 interface LoginRequestBody {
@@ -13,11 +14,13 @@ interface LoginRequestBody {
 // Define the shape of the response body
 interface LoginResponse {
   message: string;
-  data?: string; // Token will be returned here if login is successful
+  data?: any; // Token will be returned here if login is successful
   error?: string; // Error message if something goes wrong
 }
 
-export async function POST(req: Request): Promise<NextResponse<LoginResponse>> {
+export async function POST(
+  req: NextRequest
+): Promise<NextResponse<LoginResponse>> {
   const body: LoginRequestBody = await req.json();
   const { email, password } = body;
 
@@ -54,9 +57,10 @@ export async function POST(req: Request): Promise<NextResponse<LoginResponse>> {
     }
 
     const token = signToken({
-      userId: user.id,
-      userName: user.name,
-      role: user.role
+      id: user.id,
+      name: user.name,
+      role: user.role,
+      email: user.email
     });
 
     return NextResponse.json(
