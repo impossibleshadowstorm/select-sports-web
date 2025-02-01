@@ -1,8 +1,8 @@
-import { authenticateAdmin } from "@/middlewares/auth";
-import { validateRequiredFields } from "@/lib/utils/validator";
-import { register, RegisterRequestBody } from "../../auth/register/route";
-import { NextResponse } from "next/server";
-import { Role } from "@prisma/client";
+import { authenticateAdmin } from '@/middlewares/auth';
+import { validateRequiredFields } from '@/lib/utils/validator';
+import { register, RegisterRequestBody } from '../../auth/register/route';
+import { NextRequest, NextResponse } from 'next/server';
+import { Role } from '@prisma/client';
 
 // Types for the Request and Next function
 interface Request {
@@ -10,12 +10,12 @@ interface Request {
   json: () => Promise<any>;
 }
 
-export async function POST(req: Request) {
+export async function POST(req: Request | NextRequest) {
   return await authenticateAdmin(req, async () => {
     const body: RegisterRequestBody = await req.json();
 
     // Define required fields
-    const requiredFields = ["role"];
+    const requiredFields = ['role'];
 
     // Validate fields
     const { isValid, missingFields } = validateRequiredFields(
@@ -27,13 +27,13 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: `The following fields are missing: ${missingFields.join(
-            ", "
-          )} while creating an Admin.`,
+            ', '
+          )} while creating an Admin.`
         },
         { status: 400 }
       );
     }
-    
+
     return register(body, Role.ADMIN);
   });
 }

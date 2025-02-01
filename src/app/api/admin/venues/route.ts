@@ -3,7 +3,7 @@ import prisma from '@/lib/utils/prisma-client';
 import { validateRequiredFields } from '@/lib/utils/validator';
 import { NextResponse } from 'next/server';
 import { AvailableStates } from '@prisma/client';
-import { Address, Sport } from '@prisma/client';
+import { Address } from '@prisma/client';
 
 interface VenueRequestBody {
   name: string;
