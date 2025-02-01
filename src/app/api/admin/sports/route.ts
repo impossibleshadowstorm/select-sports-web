@@ -1,7 +1,7 @@
-import { authenticateAdmin } from "@/middlewares/auth";
-import prisma from "@/lib/utils/prisma-client";
-import { NextResponse } from "next/server";
-import { AvailableSports } from "@prisma/client";
+import { authenticateAdmin } from '@/middlewares/auth';
+import prisma from '@/lib/utils/prisma-client';
+import { NextRequest, NextResponse } from 'next/server';
+import { AvailableSports } from '@prisma/client';
 
 // Define request body type
 interface SportRequestBody {
@@ -10,16 +10,16 @@ interface SportRequestBody {
   totalPlayer: number;
 }
 
-export async function POST(req: Request) {
+export async function POST(req: Request | NextRequest) {
   return await authenticateAdmin(req, async () => {
     const { name, rules, totalPlayer }: SportRequestBody = await req.json();
 
     // Validate required fields
-    if (!name || !rules || typeof totalPlayer !== "number") {
+    if (!name || !rules || typeof totalPlayer !== 'number') {
       return NextResponse.json(
         {
           message:
-            "Missing or invalid required fields: name, rules, or totalPlayer.",
+            'Missing or invalid required fields: name, rules, or totalPlayer.'
         },
         { status: 400 }
       );
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
         {
           message: `Invalid sport name. Allowed values are: ${Object.values(
             AvailableSports
-          ).join(", ")}.`,
+          ).join(', ')}.`
         },
         { status: 400 }
       );
@@ -42,23 +42,23 @@ export async function POST(req: Request) {
         data: {
           name,
           rules,
-          totalPlayer,
-        },
+          totalPlayer
+        }
       });
       return NextResponse.json(
-        { data: sport, message: "Sport Added Successfully" },
+        { data: sport, message: 'Sport Added Successfully' },
         { status: 201 }
       );
     } catch (error: any) {
       const isUniqueConstraintError = error.message.includes(
-        "Unique constraint failed"
+        'Unique constraint failed'
       );
       return NextResponse.json(
         {
           message: isUniqueConstraintError
             ? `Sport with name "${name}" already exists.`
-            : "Unable to Add Sport",
-          error: `Failed to create sport: ${error.message}`,
+            : 'Unable to Add Sport',
+          error: `Failed to create sport: ${error.message}`
         },
         { status: 500 }
       );
