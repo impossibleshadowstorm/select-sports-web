@@ -37,7 +37,6 @@ export default auth(async (req) => {
       return Response.redirect(url);
     }
   } catch (error) {
-    console.log(error);
     const url = req.url.replace(req.nextUrl.pathname, '/');
     return Response.redirect(url);
   }

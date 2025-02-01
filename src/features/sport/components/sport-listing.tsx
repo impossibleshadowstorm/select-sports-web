@@ -13,6 +13,7 @@ export default async function SportListingPage({}: SportListingPage) {
   const pageLimit = searchParamsCache.get('limit');
   const categories = searchParamsCache.get('categories');
 
+  // eslint-disable-next-line
   const filters = {
     page,
     limit: pageLimit,

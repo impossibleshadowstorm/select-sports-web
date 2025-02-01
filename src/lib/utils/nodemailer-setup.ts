@@ -1,4 +1,4 @@
-import nodemailer, { Transporter } from "nodemailer";
+import nodemailer, { Transporter } from 'nodemailer';
 
 interface MailOptions {
   to: string; // Receiver's email
@@ -7,27 +7,29 @@ interface MailOptions {
 }
 
 const transporter: Transporter = nodemailer.createTransport({
-  service: "Gmail", // Replace with the desired service (e.g., Outlook, Yahoo)
+  service: 'Gmail', // Replace with the desired service (e.g., Outlook, Yahoo)
   auth: {
     user: process.env.EMAIL_USER as string, // Your email address
-    pass: process.env.EMAIL_PASSWORD as string, // Your email password
-  },
+    pass: process.env.EMAIL_PASSWORD as string // Your email password
+  }
 });
 
-export const sendMail = async ({ to, subject, text }: MailOptions): Promise<any> => {
+export const sendMail = async ({
+  to,
+  subject,
+  text
+}: MailOptions): Promise<any> => {
   const mailOptions = {
     from: process.env.EMAIL_USER as string, // Sender's email address
     to,
     subject,
-    text,
+    text
   };
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent: " + info.response);
     return info;
   } catch (error: any) {
-    console.error("Error sending email: ", error);
-    throw new Error("Email could not be sent");
+    throw new Error('Email could not be sent', error);
   }
 };

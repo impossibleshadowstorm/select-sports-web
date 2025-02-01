@@ -1,5 +1,5 @@
-import { authenticate } from "../../../middlewares/auth";
-import { NextResponse } from "next/server";
+import { authenticate } from '../../../middlewares/auth';
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   return await authenticate(req, async () => {
@@ -11,17 +11,18 @@ export async function GET(req) {
         where: { id: userId },
         include: {
           address: true,
-          bookings: true,
-        },
+          bookings: true
+        }
       });
 
+      // eslint-disable-next-line
       const { pass, ...otherData } = user;
 
       // Return the authenticated user's data
       return NextResponse.json(
         {
           data: otherData,
-          authenticated: true,
+          authenticated: true
         },
         { status: 200 }
       );
@@ -29,7 +30,7 @@ export async function GET(req) {
       return NextResponse.json(
         {
           message: `Failed to retrieve user data`,
-          error: `Error: ${error.message}`,
+          error: `Error: ${error.message}`
         },
         { status: 400 }
       );
