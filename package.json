@@ -9,9 +9,8 @@
   "scripts": {
     "dev": "next dev -p 3005 --turbopack",
     "build": "prisma generate && next build",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build && next export",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
-    "export": "next export",
     "lint": "next lint",
     "lint:fix": "eslint src --fix && pnpm format",
     "lint:strict": "eslint --max-warnings=0 src",
