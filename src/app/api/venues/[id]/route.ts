@@ -1,9 +1,11 @@
-import prisma from "@/lib/utils/prisma-client";
-import { NextResponse } from "next/server";
+import prisma from '@/lib/utils/prisma-client';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 // Define the types for the request and response
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const { id } = await params;
+export async function GET(req: NextRequest) {
+  // const { id } = await params;
+  const id = req.nextUrl.pathname.split('/').pop();
 
   try {
     // Fetch the venue by ID
@@ -11,8 +13,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       where: { id },
       include: {
         address: true,
-        sports: true,
-      },
+        sports: true
+      }
     });
 
     if (!venue) {
@@ -23,11 +25,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
 
     return NextResponse.json({ data: venue }, { status: 200 });
-  } catch (error: any)  {
+  } catch (error: any) {
     return NextResponse.json(
       {
-        message: "Failed to fetch venue data.",
-        error: `Error: ${error.message}`,
+        message: 'Failed to fetch venue data.',
+        error: `Error: ${error.message}`
       },
       { status: 500 }
     );

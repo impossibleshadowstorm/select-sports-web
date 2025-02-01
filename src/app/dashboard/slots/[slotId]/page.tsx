@@ -1,7 +1,7 @@
 import FormCardSkeleton from '@/components/form-card-skeleton';
 import PageContainer from '@/components/layout/page-container';
 import { Suspense } from 'react';
-import VenueViewPage from '@/features/venues/components/venue-view-page';
+import SlotViewPage from '@/features/slots/components/slot-view-page';
 
 export const metadata = {
   title: 'Dashboard : Slot View'
@@ -15,7 +15,7 @@ export default async function Page(props: PageProps) {
     <PageContainer scrollable>
       <div className='flex-1 space-y-4'>
         <Suspense fallback={<FormCardSkeleton />}>
-          <VenueViewPage slotId={params.slotId} />
+          <SlotViewPage slotId={params.slotId} />
         </Suspense>
       </div>
     </PageContainer>

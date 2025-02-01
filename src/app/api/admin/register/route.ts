@@ -1,16 +1,12 @@
 import { authenticateAdmin } from '@/middlewares/auth';
 import { validateRequiredFields } from '@/lib/utils/validator';
-import { register, RegisterRequestBody } from '../../auth/register/route';
-import { NextRequest, NextResponse } from 'next/server';
+import { RegisterRequestBody } from '../../auth/register/route';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { Role } from '@prisma/client';
+import { register } from '@/lib/utils/register-request';
 
-// Types for the Request and Next function
-interface Request {
-  user?: any;
-  json: () => Promise<any>;
-}
-
-export async function POST(req: Request | NextRequest) {
+export async function POST(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
     const body: RegisterRequestBody = await req.json();
 

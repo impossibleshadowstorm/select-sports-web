@@ -1,6 +1,6 @@
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 
 // Declare a global type for `prisma` to avoid conflicts in development
 declare global {
@@ -13,7 +13,7 @@ if (!global.prisma) {
   const connectionString = process.env.DATABASE_URL;
 
   if (!connectionString) {
-    throw new Error("DATABASE_URL environment variable is not defined");
+    throw new Error('DATABASE_URL environment variable is not defined');
   }
 
   // Initialize a connection pool
@@ -21,7 +21,7 @@ if (!global.prisma) {
 
   // Create a Prisma adapter using the connection pool
   const adapter = new PrismaPg(pool, {
-    schema: "public",
+    schema: 'public'
   });
 
   // Initialize Prisma Client with the adapter

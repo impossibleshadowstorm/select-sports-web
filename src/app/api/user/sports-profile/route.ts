@@ -2,25 +2,27 @@ import { authenticate } from '@/middlewares/auth';
 import prisma from '@/lib/utils/prisma-client';
 import { NextResponse } from 'next/server';
 import { validateRequiredFields } from '@/lib/utils/validator';
+import { AuthenticatedRequest } from '@/lib/utils/request-type';
+import { PreferredFoot, PreferredPosition, SkillLevel } from '@prisma/client';
 
 interface SportsProfileRequestBody {
-  skillLevel: string;
-  preferredPosition: string;
-  strength: string[];
-  weakness: string[];
-  preferredFoot: string;
+  skillLevel: SkillLevel;
+  preferredPosition: PreferredPosition;
+  strength: string;
+  weakness: string;
+  preferredFoot: PreferredFoot;
   favoriteNumber?: number;
   favoritePlayer?: string;
   favoriteClub?: string;
 }
 
-export async function GET(req: Request) {
+export async function GET(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
-      const { userId } = req.user as { userId: string };
+      const { id } = req.user as { id: string };
 
-      const sportsProfile = await prisma.SportsProfile.findUnique({
-        where: { userId: userId }
+      const sportsProfile = await prisma.sportsProfile.findUnique({
+        where: { userId: id }
       });
 
       if (!sportsProfile) {
@@ -40,10 +42,10 @@ export async function GET(req: Request) {
   });
 }
 
-export async function POST(req: Request) {
+export async function POST(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     const body: SportsProfileRequestBody = await req.json();
-    const { userId } = req.user;
+    const { id } = req.user as { id: string };
 
     // Define required fields
     const requiredFields = [
@@ -72,7 +74,7 @@ export async function POST(req: Request) {
     try {
       // Check if the user already has a sports profile
       const existingProfile = await prisma.sportsProfile.findUnique({
-        where: { userId: userId }
+        where: { userId: id }
       });
 
       if (existingProfile) {
@@ -87,7 +89,7 @@ export async function POST(req: Request) {
           ...body,
           user: {
             connect: {
-              id: userId
+              id
             }
           }
           // userId: userId
@@ -110,18 +112,18 @@ export async function POST(req: Request) {
   });
 }
 
-export async function PATCH(req: Request) {
+export async function PATCH(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     const body = await req.json();
-    const { userId } = req.user;
+    const { id } = req.user as { id: string };
     try {
       const updateData = {
         ...(body.skillLevel && { skillLevel: body.skillLevel }),
         ...(body.preferredPosition && {
           preferredPosition: body.preferredPosition
         }),
-        ...(body.strengths && { strength: body.strengths }),
-        ...(body.weaknesses && { weakness: body.weaknesses }),
+        ...(body.strength && { strength: body.strength }),
+        ...(body.weakness && { weakness: body.weakness }),
         ...(body.preferredFoot && { preferredFoot: body.preferredFoot }),
         ...(body.favoriteNumber && { favoriteNumber: body.favoriteNumber }),
         ...(body.favoritePlayer && { favoritePlayer: body.favoritePlayer }),
@@ -137,7 +139,7 @@ export async function PATCH(req: Request) {
       }
 
       const updatedProfile = await prisma.sportsProfile.update({
-        where: { userId: userId },
+        where: { userId: id },
         data: updateData
       });
 

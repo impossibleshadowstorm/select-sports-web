@@ -1,19 +1,19 @@
 import { notFound } from 'next/navigation';
-import VenueForm from './slot-form';
+import SlotForm from './slot-form';
 import { get } from '@/lib/api-client';
 
 type TSlotViewPageProps = {
-  venueId: string;
+  slotId: string;
 };
 
-export default async function SlotViewPage({ venueId }: TSlotViewPageProps) {
+export default async function SlotViewPage({ slotId }: TSlotViewPageProps) {
   let venue = null;
   let pageTitle = 'Create New Slot';
 
   const { data: availableSports } = await get(`/sports`);
 
-  if (venueId !== 'new') {
-    const response = await get(`/slots/${venueId}`);
+  if (slotId !== 'new') {
+    const response = await get(`/slots/${slotId}`);
     venue = response.data;
     if (!venue) {
       notFound();
@@ -22,7 +22,7 @@ export default async function SlotViewPage({ venueId }: TSlotViewPageProps) {
   }
 
   return (
-    <VenueForm
+    <SlotForm
       initialData={venue}
       availableSports={availableSports}
       pageTitle={pageTitle}

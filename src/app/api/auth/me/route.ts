@@ -1,6 +1,7 @@
-import { authenticate } from "@/middlewares/auth";
-import { NextResponse } from "next/server";
-import prisma from "@/lib/utils/prisma-client";
+import { authenticate } from '@/middlewares/auth';
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/utils/prisma-client';
+import { AuthenticatedRequest } from '@/lib/utils/request-type';
 
 // Type definitions
 interface AuthenticatedUser {
@@ -17,22 +18,22 @@ interface ResponseMessage {
   authenticated?: boolean;
 }
 
-export async function GET(req: Request) {
+export async function GET(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
-      const { userId } = req.user as { userId: string }; // Get user ID from the authenticated request
+      const { id } = req.user as { id: string }; // Get user ID from the authenticated request
 
       // Fetch user data from the database (if you need to return user details)
       const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, name: true, email: true, role: true }, // Specify fields to return
+        where: { id },
+        select: { id: true, name: true, email: true, role: true } // Specify fields to return
       });
 
       if (!user) {
         return NextResponse.json<ResponseMessage>(
           {
-            message: "User not found",
-            authenticated: false,
+            message: 'User not found',
+            authenticated: false
           },
           { status: 404 }
         );
@@ -50,8 +51,8 @@ export async function GET(req: Request) {
     } catch (error: any) {
       return NextResponse.json<ResponseMessage>(
         {
-          message: "Failed to retrieve user data",
-          error: `Error: ${error.message}`,
+          message: 'Failed to retrieve user data',
+          error: `Error: ${error.message}`
         },
         { status: 400 }
       );
