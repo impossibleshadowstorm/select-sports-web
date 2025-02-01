@@ -12,6 +12,7 @@ interface DataTableSearchProps {
     value: string | ((old: string) => string | null) | null,
     options?: Options | undefined
   ) => Promise<URLSearchParams>;
+  // eslint-disable-next-line
   setPage: <Shallow>(
     value: number | ((old: number) => number | null) | null,
     options?: Options | undefined
@@ -43,8 +44,8 @@ interface DataTableSearchProps {
 export function DataTableSearch({
   searchKey,
   searchQuery,
-  setSearchQuery,
-  setPage
+  setSearchQuery, // eslint-disable-line
+  setPage // eslint-disable-line
 }: DataTableSearchProps) {
   const [isLoading, startTransition] = useTransition();
 

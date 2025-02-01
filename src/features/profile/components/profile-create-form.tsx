@@ -42,18 +42,23 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({
 }) => {
   const params = useParams();
   const router = useRouter();
+  // eslint-disable-next-line
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line
   const [imgLoading, setImgLoading] = useState(false);
   const title = initialData ? 'Edit product' : 'Create Your Profile';
   const description = initialData
     ? 'Edit a product.'
     : 'To create your resume, we first need some basic information about you.';
+  // eslint-disable-next-line
   const toastMessage = initialData ? 'Product updated.' : 'Product created.';
+  // eslint-disable-next-line
   const action = initialData ? 'Save changes' : 'Create';
   const [previousStep, setPreviousStep] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState({});
+  // eslint-disable-next-line
   const delta = currentStep - previousStep;
 
   const defaultValues = {
@@ -85,6 +90,7 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({
     name: 'jobs'
   });
 
+  // eslint-disable-next-line
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       setLoading(true);
@@ -102,6 +108,7 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({
     }
   };
 
+  // eslint-disable-next-line
   const onDelete = async () => {
     try {
       setLoading(true);
@@ -116,7 +123,6 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({
   };
 
   const processForm: SubmitHandler<ProfileFormValues> = (data) => {
-    console.log('data ==>', data);
     setData(data);
     // api call and reset
     // form.reset();

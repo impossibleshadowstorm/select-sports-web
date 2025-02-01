@@ -31,6 +31,7 @@ export function ColumnActions({
   title: string;
   id: UniqueIdentifier;
 }) {
+  // eslint-disable-next-line
   const [open, setIsOpen] = React.useState(false);
   const [name, setName] = React.useState(title);
   const updateCol = useTaskStore((state) => state.updateCol);
