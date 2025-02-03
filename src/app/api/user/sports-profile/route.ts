@@ -32,7 +32,18 @@ export async function GET(req: AuthenticatedRequest) {
         );
       }
 
-      return NextResponse.json({ data: sportsProfile }, { status: 200 });
+      return NextResponse.json(
+        {
+          data: {
+            ...sportsProfile,
+            totalMatches: 0,
+            winnings: 0,
+            draws: 0,
+            loses: 0
+          }
+        },
+        { status: 200 }
+      );
     } catch (error: any) {
       return NextResponse.json(
         { message: 'Failed to fetch sports profile.', error: error.message },
