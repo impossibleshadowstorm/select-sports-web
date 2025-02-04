@@ -15,7 +15,11 @@ interface ResponseMessage {
   error?: string;
 }
 
-const OTP_EXPIRATION_MINUTES = process.env.OTP_EXPIRATION_MINUTES ?? '600';
+// const OTP_EXPIRATION_MINUTES:number = process.env.OTP_EXPIRATION_MINUTES ?? '600';
+const OTP_EXPIRATION_MINUTES: number = parseInt(
+  process.env.OTP_EXPIRATION_MINUTES ?? '600',
+  10
+);
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const body: RequestBody = await req.json();
@@ -53,7 +57,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Generate OTP
     const otp = generateOTP();
     const otpExpiresAt = new Date(
-      Date.now() + (parseInt(OTP_EXPIRATION_MINUTES) || 10) * 60000
+      Date.now() + (OTP_EXPIRATION_MINUTES || 10) * 60000
     ); // Default to 10 minutes if no env variable
 
     // Update user with OTP and expiration
@@ -66,7 +70,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await sendMail({
       to: email,
       subject: 'Password Reset OTP',
-      text: `Your OTP is ${otp}. It expires in ${OTP_EXPIRATION_MINUTES} minutes.`
+      text: `Your OTP is ${otp}. It expires in ${OTP_EXPIRATION_MINUTES / 60} minutes.`
     });
 
     return NextResponse.json<ResponseMessage>(
