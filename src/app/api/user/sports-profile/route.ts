@@ -56,7 +56,7 @@ export async function GET(req: AuthenticatedRequest) {
 export async function POST(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     const body: SportsProfileRequestBody = await req.json();
-    const { userId } = req.user as { userId: string };
+    const { id } = req.user as { id: string };
 
     // Define required fields
     const requiredFields = [
@@ -126,7 +126,7 @@ export async function POST(req: AuthenticatedRequest) {
 export async function PATCH(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     const body = await req.json();
-    const { userId } = req.user;
+    const { id } = req.user as { id: string };
 
     // Define the fields to update
     const updateFields = [
@@ -157,7 +157,7 @@ export async function PATCH(req: AuthenticatedRequest) {
     try {
       // Check if the sports profile exists for the user
       const existingProfile = await prisma.sportsProfile.findUnique({
-        where: { userId: userId }
+        where: { userId: id }
       });
 
       if (!existingProfile) {
@@ -169,7 +169,7 @@ export async function PATCH(req: AuthenticatedRequest) {
 
       // Prepare the update data
       const updateData = {
-        ...fieldsToUpdate.reduce((acc, field) => {
+        ...fieldsToUpdate.reduce<Record<string, any>>((acc, field) => {
           if (body[field]) acc[field] = body[field];
           return acc;
         }, {})

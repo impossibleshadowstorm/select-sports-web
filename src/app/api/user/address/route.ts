@@ -6,7 +6,7 @@
 // export async function POST(req) {
 //   return await authenticate(req, async () => {
 //     try {
-//       const { userId } = req.user; // Get authenticated user ID
+//       const { id } = req.user; // Get authenticated user ID
 //       const body = await req.json();
 
 //       // Define required fields
@@ -43,7 +43,7 @@
 
 //       // Check if the user already has an address
 //       const userWithAddress = await prisma.user.findUnique({
-//         where: { id: userId },
+//         where: { id: id },
 //         select: { addressId: true }
 //       });
 
@@ -58,13 +58,13 @@
 //       const address = await prisma.address.create({
 //         data: {
 //           ...body,
-//           User: { connect: { id: userId } }
+//           User: { connect: { id: id } }
 //         }
 //       });
 
 //       // Update the user's `addressId`
 //       await prisma.user.update({
-//         where: { id: userId },
+//         where: { id: id },
 //         data: { addressId: address.id }
 //       });
 
@@ -87,7 +87,7 @@
 // export async function PATCH(req) {
 //   return await authenticate(req, async () => {
 //     try {
-//       const { userId } = req.user; // Get authenticated user ID
+//       const { id } = req.user; // Get authenticated user ID
 //       const body = await req.json();
 
 //       // Ensure at least one field is provided for the update
@@ -116,7 +116,7 @@
 
 //       // Check if the user already has an address
 //       const userWithAddress = await prisma.user.findUnique({
-//         where: { id: userId },
+//         where: { id: id },
 //         select: { addressId: true }
 //       });
 
@@ -158,26 +158,19 @@
 
 import { authenticate } from '../../../../middlewares/auth';
 import { NextResponse } from 'next/server';
-import { AvailableStates } from '@prisma/client';
+import { Address, AvailableStates } from '@prisma/client';
 import { validateRequiredFields } from '@/lib/utils/validator';
-import { NextRequest, NextResponse as NextResponseType } from 'next/server';
 import prisma from '@/lib/utils/prisma-client';
+import { AuthenticatedRequest } from '@/lib/utils/request-type';
 
-interface AddressBody {
-  street?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-}
-
-export async function POST(req: NextRequest): Promise<NextResponseType> {
+export async function POST(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
-      const { userId } = req.user as { userId: string }; // Type user as containing `userId`
-      const body: AddressBody = await req.json();
+      const { id } = req.user as { id: string };
+      const body: Address = await req.json();
 
       // Define required fields
-      const requiredFields: (keyof AddressBody)[] = [
+      const requiredFields: (keyof Address)[] = [
         'street',
         'city',
         'state',
@@ -202,7 +195,9 @@ export async function POST(req: NextRequest): Promise<NextResponseType> {
       }
 
       // Ensure the state is valid
-      if (!Object.values(AvailableStates).includes(body.state!)) {
+      if (
+        !Object.values(AvailableStates).includes(body.state as AvailableStates)
+      ) {
         return NextResponse.json(
           {
             message: `Invalid state. Allowed states are: ${Object.values(
@@ -215,7 +210,7 @@ export async function POST(req: NextRequest): Promise<NextResponseType> {
 
       // Check if the user already has an address
       const userWithAddress = await prisma.user.findUnique({
-        where: { id: userId },
+        where: { id: id },
         select: { addressId: true }
       });
 
@@ -230,13 +225,13 @@ export async function POST(req: NextRequest): Promise<NextResponseType> {
       const address = await prisma.address.create({
         data: {
           ...body,
-          User: { connect: { id: userId } }
+          User: { connect: { id: id } }
         }
       });
 
       // Update the user's `addressId`
       await prisma.user.update({
-        where: { id: userId },
+        where: { id: id },
         data: { addressId: address.id }
       });
 
@@ -256,11 +251,11 @@ export async function POST(req: NextRequest): Promise<NextResponseType> {
   });
 }
 
-export async function PATCH(req: NextRequest): Promise<NextResponseType> {
+export async function PATCH(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
-      const { userId } = req.user as { userId: string }; // Type user as containing `userId`
-      const body: AddressBody = await req.json();
+      const { id } = req.user as { id: string };
+      const body: Address = await req.json();
 
       // Ensure at least one field is provided for the update
       const { street, city, state, postalCode } = body;
@@ -288,7 +283,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponseType> {
 
       // Check if the user already has an address
       const userWithAddress = await prisma.user.findUnique({
-        where: { id: userId },
+        where: { id: id },
         select: { addressId: true }
       });
 
@@ -300,7 +295,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponseType> {
       }
 
       // Prepare the data object for the update
-      const updateData: Partial<AddressBody> = {};
+      const updateData: Partial<Address> = {};
       if (street) updateData.street = street;
       if (city) updateData.city = city;
       if (state) updateData.state = state;

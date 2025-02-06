@@ -4,11 +4,11 @@
 // export async function GET(req) {
 //   return await authenticate(req, async () => {
 //     try {
-//       const { userId } = req.user; // Get user ID from the authenticated request
+//       const { id } = req.user; // Get user ID from the authenticated request
 
 //       // Optionally, fetch user data from the database (if you need to return user details)
 //       const user = await prisma.user.findUnique({
-//         where: { id: userId },
+//         where: { id: id },
 //         include: {
 //           address: true,
 //           bookings: true,
@@ -39,17 +39,17 @@
 
 import { authenticate } from '../../../middlewares/auth';
 import { NextResponse } from 'next/server';
-import { NextRequest, NextResponse as NextResponseType } from 'next/server';
 import prisma from '@/lib/utils/prisma-client';
+import { AuthenticatedRequest } from '@/lib/utils/request-type';
 
-export async function GET(req: NextRequest): Promise<NextResponseType> {
+export async function GET(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
-      const { userId } = req.user as { userId: string }; // Explicitly type `req.user`
+      const { id } = req.user as { id: string }; // Explicitly type `req.user`
 
       // Fetch user data from the database
       const user = await prisma.user.findUnique({
-        where: { id: userId },
+        where: { id },
         include: {
           address: true,
           bookings: true
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest): Promise<NextResponseType> {
       }
 
       // Exclude sensitive information like `pass`
-      const { pass, ...otherData } = user;
+      const { pass, ...otherData } = user; // eslint-disable-line
 
       // Return the authenticated user's data
       return NextResponse.json(
