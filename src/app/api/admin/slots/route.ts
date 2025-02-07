@@ -12,6 +12,7 @@ interface SlotRequestBody {
   venueId: string;
 }
 
+// Expected Format: YYYY-MM-DDTHH:mm:ss
 const dateTimeFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 
 // Function to validate the date-time format
