@@ -3,7 +3,7 @@ import { authenticateAdmin } from '../../../../middlewares/auth';
 import { NextResponse } from 'next/server';
 import { validateRequiredFields } from '@/lib/utils/validator';
 import { SlotStatus } from '@prisma/client';
-import { NextRequest, NextResponse as NextResponseType } from 'next/server';
+import { AuthenticatedRequest } from '@/lib/utils/request-type';
 
 interface SlotRequestBody {
   startTime: string;
@@ -12,7 +12,62 @@ interface SlotRequestBody {
   venueId: string;
 }
 
-export async function POST(req: NextRequest): Promise<NextResponseType> {
+const dateTimeFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
+
+// Function to validate the date-time format
+function validateDateTimeFormat(
+  startTime: string,
+  endTime: string
+): { isValid: boolean; message?: string } {
+  if (!dateTimeFormat.test(startTime) || !dateTimeFormat.test(endTime)) {
+    return {
+      isValid: false,
+      message: 'Invalid date-time format. Use YYYY-MM-DDTHH:mm:ss'
+    };
+  }
+
+  // Convert to Date objects
+  const parsedStartTime = new Date(startTime);
+  const parsedEndTime = new Date(endTime);
+
+  // Ensure valid dates
+  if (isNaN(parsedStartTime.getTime()) || isNaN(parsedEndTime.getTime())) {
+    return {
+      isValid: false,
+      message: 'Invalid date values. Ensure correct format and valid date-time.'
+    };
+  }
+
+  // Ensure startTime is before endTime
+  if (parsedStartTime >= parsedEndTime) {
+    return {
+      isValid: false,
+      message: 'startTime must be earlier than endTime.'
+    };
+  }
+
+  return { isValid: true };
+}
+
+// Function to check if the sport exists
+async function checkSportExistence(sportId: string) {
+  const sport = await prisma.sport.findUnique({ where: { id: sportId } });
+  if (!sport) {
+    return { isValid: false, message: `Sport with ID ${sportId} not found.` };
+  }
+  return { isValid: true };
+}
+
+// Function to check if the venue exists
+async function checkVenueExistence(venueId: string) {
+  const venue = await prisma.venue.findUnique({ where: { id: venueId } });
+  if (!venue) {
+    return { isValid: false, message: `Venue with ID ${venueId} not found.` };
+  }
+  return { isValid: true };
+}
+
+export async function POST(req: AuthenticatedRequest) {
   return await authenticateAdmin(req, async () => {
     try {
       const body: SlotRequestBody = await req.json();
@@ -24,6 +79,7 @@ export async function POST(req: NextRequest): Promise<NextResponseType> {
         'sportId',
         'venueId'
       ];
+
       const { isValid, missingFields } = validateRequiredFields(
         body,
         requiredFields
@@ -40,20 +96,29 @@ export async function POST(req: NextRequest): Promise<NextResponseType> {
 
       const { startTime, endTime, sportId, venueId } = body;
 
-      // Validate sport existence
-      const sport = await prisma.sport.findUnique({ where: { id: sportId } });
-      if (!sport) {
+      // Validate date-time format
+      const dateTimeValidation = validateDateTimeFormat(startTime, endTime);
+      if (!dateTimeValidation.isValid) {
         return NextResponse.json(
-          { message: `Sport with ID ${sportId} not found.` },
+          { message: dateTimeValidation.message },
+          { status: 400 }
+        );
+      }
+
+      // Validate sport existence
+      const sportValidation = await checkSportExistence(sportId);
+      if (!sportValidation.isValid) {
+        return NextResponse.json(
+          { message: sportValidation.message },
           { status: 404 }
         );
       }
 
       // Validate venue existence
-      const venue = await prisma.venue.findUnique({ where: { id: venueId } });
-      if (!venue) {
+      const venueValidation = await checkVenueExistence(venueId);
+      if (!venueValidation.isValid) {
         return NextResponse.json(
-          { message: `Venue with ID ${venueId} not found.` },
+          { message: venueValidation.message },
           { status: 404 }
         );
       }

@@ -36,7 +36,7 @@ export const authenticateAdmin = async (
 
     // Fetch the user from the database to check their role
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: decoded.id },
       select: { role: true } // Only select the role field
     });
 
