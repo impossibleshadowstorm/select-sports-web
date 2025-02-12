@@ -16,7 +16,7 @@ interface RouteParams {
 }
 
 // Update a Slot
-export async function PUT(
+export async function PATCH(
   req: NextRequest,
   { params }: { params: RouteParams }
 ): Promise<NextResponseType> {

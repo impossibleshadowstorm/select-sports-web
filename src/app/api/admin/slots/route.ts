@@ -68,6 +68,7 @@ async function checkVenueExistence(venueId: string) {
   return { isValid: true };
 }
 
+// Create a Slot
 export async function POST(req: AuthenticatedRequest) {
   return await authenticateAdmin(req, async () => {
     try {
