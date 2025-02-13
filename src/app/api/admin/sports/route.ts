@@ -39,6 +39,19 @@ export async function POST(req: NextRequest | NextRequest) {
     }
 
     try {
+      console.log({
+        name,
+        rules,
+        totalPlayer
+      });
+      const existingSport = await prisma.sport.findMany({});
+      console.log(existingSport);
+      if (existingSport) {
+        return NextResponse.json(
+          { message: 'Sport name already exists' },
+          { status: 400 }
+        );
+      }
       const sport = await prisma.sport.create({
         data: {
           name,
@@ -46,6 +59,7 @@ export async function POST(req: NextRequest | NextRequest) {
           totalPlayer
         }
       });
+      console.log('sport Done');
       return NextResponse.json(
         { data: sport, message: 'Sport Added Successfully' },
         { status: 201 }

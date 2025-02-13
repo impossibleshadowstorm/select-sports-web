@@ -179,7 +179,7 @@ model Sport {
 }
 
 model Slot {
-  id        String     @id @default(uuid()) @db.Uuid
+  id        String     @id @default(uuid()) @db.Uuid 
   startTime DateTime
   endTime   DateTime
   maxPlayer Int
@@ -187,7 +187,7 @@ model Slot {
   status    SlotStatus @default(AVAILABLE)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-
+  
   bookings Booking[]
   sport    Sport     @relation(fields: [sportId], references: [id])
   sportId  String    @db.Uuid
