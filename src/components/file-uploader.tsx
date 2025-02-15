@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useControllableState } from '@/hooks/use-controllable-state';
 import { cn, formatBytes } from '@/lib/utils';
+import { uploadFileToS3 } from '@/lib/utils/s3-operations';
 
 interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
@@ -112,55 +113,86 @@ export function FileUploader(props: FileUploaderProps) {
     onChange: onValueChange
   });
 
-  const onDrop = React.useCallback(
-    (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
-      if (!multiple && maxFiles === 1 && acceptedFiles.length > 1) {
-        toast.error('Cannot upload more than 1 file at a time');
-        return;
-      }
+  const [uploadProgress, setUploadProgress] = React.useState<
+    Record<string, number>
+  >({});
 
-      if ((files?.length ?? 0) + acceptedFiles.length > maxFiles) {
-        toast.error(`Cannot upload more than ${maxFiles} files`);
-        return;
-      }
+  const handleUpload = async (filesToUpload: File[]) => {
+    if (filesToUpload.length === 0) return;
 
-      const newFiles = acceptedFiles.map((file) =>
+    try {
+      setUploadProgress((prev) => {
+        const newProgress = { ...prev };
+        filesToUpload.forEach((file) => {
+          newProgress[file.name] = 0; // Initialize progress
+        });
+        return newProgress;
+      });
+
+      // Upload all files simultaneously
+      const uploadedUrls = await Promise.all(
+        filesToUpload.map(async (file) => {
+          try {
+            const fileUrl = await uploadFileToS3(file); // Upload to S3
+            setUploadProgress((prev) => ({ ...prev, [file.name]: 100 })); // Mark as complete
+            return fileUrl;
+          } catch (error) {
+            console.error('Upload failed for', file.name, error);
+            toast.error(`Upload failed: ${file.name}`);
+            return null; // Mark failure
+          }
+        })
+      );
+
+      // Filter out failed uploads
+      const successfulUploads = uploadedUrls.filter((url) => url !== null);
+
+      if (onUpload) {
+        if (successfulUploads.length === filesToUpload.length) {
+          await onUpload(successfulUploads); // Send all uploaded URLs
+        } else {
+          console.error('Some files failed to upload.');
+        }
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error);
+    }
+  };
+
+  const onDrop = (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+    if (!multiple && maxFiles === 1 && acceptedFiles.length > 1) {
+      toast.error('Cannot upload more than 1 file at a time');
+      return;
+    }
+
+    if ((files?.length ?? 0) + acceptedFiles.length > maxFiles) {
+      toast.error(`Cannot upload more than ${maxFiles} files`);
+      return;
+    }
+
+    const newFiles = acceptedFiles
+      .filter((file) => file instanceof File)
+      .map((file) =>
         Object.assign(file, {
           preview: URL.createObjectURL(file)
         })
       );
 
-      const updatedFiles = files ? [...files, ...newFiles] : newFiles;
+    setFiles((prevFiles) => [...(prevFiles ?? []), ...newFiles]);
 
-      setFiles(updatedFiles);
+    // Call handleUpload outside of setFiles to ensure latest state is used
+    setTimeout(() => {
+      handleUpload(newFiles);
+    }, 0);
 
-      if (rejectedFiles.length > 0) {
-        rejectedFiles.forEach(({ file }) => {
-          toast.error(`File ${file.name} was rejected`);
-        });
-      }
+    if (rejectedFiles.length > 0) {
+      rejectedFiles.forEach(({ file }) => {
+        toast.error(`File ${file.name} was rejected`);
+      });
+    }
 
-      if (
-        onUpload &&
-        updatedFiles.length > 0 &&
-        updatedFiles.length <= maxFiles
-      ) {
-        const target =
-          updatedFiles.length > 0 ? `${updatedFiles.length} files` : `file`;
-
-        toast.promise(onUpload(updatedFiles), {
-          loading: `Uploading ${target}...`,
-          success: () => {
-            setFiles([]);
-            return `${target} uploaded`;
-          },
-          error: `Failed to upload ${target}`
-        });
-      }
-    },
-
-    [files, maxFiles, multiple, onUpload, setFiles]
-  );
+    // handleUpload(newFiles); // Upload to S3
+  };
 
   function onRemove(index: number) {
     if (!files) return;
@@ -169,7 +201,6 @@ export function FileUploader(props: FileUploaderProps) {
     onValueChange?.(newFiles);
   }
 
-  // Revoke preview url when component unmounts
   React.useEffect(() => {
     return () => {
       if (!files) return;
@@ -179,7 +210,6 @@ export function FileUploader(props: FileUploaderProps) {
         }
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isDisabled = disabled || (files?.length ?? 0) >= maxFiles;
@@ -191,7 +221,7 @@ export function FileUploader(props: FileUploaderProps) {
         accept={accept}
         maxSize={maxSize}
         maxFiles={maxFiles}
-        multiple={maxFiles > 1 || multiple}
+        multiple={multiple}
         disabled={isDisabled}
       >
         {({ getRootProps, getInputProps, isDragActive }) => (
@@ -199,7 +229,6 @@ export function FileUploader(props: FileUploaderProps) {
             {...getRootProps()}
             className={cn(
               'group relative grid h-52 w-full cursor-pointer place-items-center rounded-lg border-2 border-dashed border-muted-foreground/25 px-5 py-2.5 text-center transition hover:bg-muted/25',
-              'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               isDragActive && 'border-muted-foreground/50',
               isDisabled && 'pointer-events-none opacity-60',
               className
@@ -208,42 +237,18 @@ export function FileUploader(props: FileUploaderProps) {
           >
             <input {...getInputProps()} />
             {isDragActive ? (
-              <div className='flex flex-col items-center justify-center gap-4 sm:px-5'>
-                <div className='rounded-full border border-dashed p-3'>
-                  <UploadIcon
-                    className='size-7 text-muted-foreground'
-                    aria-hidden='true'
-                  />
-                </div>
-                <p className='font-medium text-muted-foreground'>
-                  Drop the files here
-                </p>
-              </div>
+              <p className='font-medium text-muted-foreground'>
+                Drop the files here
+              </p>
             ) : (
-              <div className='flex flex-col items-center justify-center gap-4 sm:px-5'>
-                <div className='rounded-full border border-dashed p-3'>
-                  <UploadIcon
-                    className='size-7 text-muted-foreground'
-                    aria-hidden='true'
-                  />
-                </div>
-                <div className='space-y-px'>
-                  <p className='font-medium text-muted-foreground'>
-                    Drag {`'n'`} drop files here, or click to select files
-                  </p>
-                  <p className='text-sm text-muted-foreground/70'>
-                    You can upload
-                    {maxFiles > 1
-                      ? ` ${maxFiles === Infinity ? 'multiple' : maxFiles}
-                      files (up to ${formatBytes(maxSize)} each)`
-                      : ` a file with ${formatBytes(maxSize)}`}
-                  </p>
-                </div>
-              </div>
+              <p className='font-medium text-muted-foreground'>
+                Drag {'&'} drop files here, or click to select files
+              </p>
             )}
           </div>
         )}
       </Dropzone>
+
       {files?.length ? (
         <ScrollArea className='h-fit w-full px-3'>
           <div className='max-h-48 space-y-4'>
@@ -252,7 +257,7 @@ export function FileUploader(props: FileUploaderProps) {
                 key={index}
                 file={file}
                 onRemove={() => onRemove(index)}
-                progress={progresses?.[file.name]}
+                progress={uploadProgress[file.name] ?? 0}
               />
             ))}
           </div>
@@ -269,43 +274,45 @@ interface FileCardProps {
 }
 
 function FileCard({ file, progress, onRemove }: FileCardProps) {
+  const imageSrc =
+    typeof file === 'string'
+      ? file
+      : isFileWithPreview(file)
+        ? file.preview
+        : undefined;
   return (
     <div className='relative flex items-center space-x-4'>
       <div className='flex flex-1 space-x-4'>
-        {isFileWithPreview(file) ? (
+        {imageSrc && (
           <Image
-            src={file.preview}
-            alt={file.name}
+            src={imageSrc}
+            alt={file?.name || imageSrc.split('/').pop() || 'Uploaded image'}
             width={48}
             height={48}
             loading='lazy'
             className='aspect-square shrink-0 rounded-md object-cover'
           />
-        ) : null}
+        )}
         <div className='flex w-full flex-col gap-2'>
-          <div className='space-y-px'>
-            <p className='line-clamp-1 text-sm font-medium text-foreground/80'>
-              {file.name}
-            </p>
-            <p className='text-xs text-muted-foreground'>
-              {formatBytes(file.size)}
-            </p>
-          </div>
-          {progress ? <Progress value={progress} /> : null}
+          <p className='line-clamp-1 text-sm font-medium text-foreground/80'>
+            {file.name}
+          </p>
+          <p className='text-xs text-muted-foreground'>
+            {formatBytes(file.size)}
+          </p>
+          {progress !== undefined && <Progress value={progress} />}
         </div>
       </div>
-      <div className='flex items-center gap-2'>
-        <Button
-          type='button'
-          variant='outline'
-          size='icon'
-          className='size-7'
-          onClick={onRemove}
-        >
-          <CrossIcon className='size-4' aria-hidden='true' />
-          <span className='sr-only'>Remove file</span>
-        </Button>
-      </div>
+      <Button
+        type='button'
+        variant='outline'
+        size='icon'
+        className='size-7'
+        onClick={onRemove}
+      >
+        <CrossIcon className='size-4' aria-hidden='true' />
+        <span className='sr-only'>Remove file</span>
+      </Button>
     </div>
   );
 }

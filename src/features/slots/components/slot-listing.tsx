@@ -23,7 +23,6 @@ export default async function SlotListingPage({}: SlotListingPage) {
 
   const response = await get('/slots/');
   const slots: Slot[] = response.data;
-
   return (
     <SlotTable<Slot, unknown>
       columns={columns}

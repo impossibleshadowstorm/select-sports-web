@@ -12,6 +12,7 @@ import { Venue } from '@prisma/client';
 import { Edit, MoreHorizontal, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface CellActionProps {
   data: Venue;
@@ -19,11 +20,36 @@ interface CellActionProps {
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   // eslint-disable-next-line
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
-  const onConfirm = async () => {};
+  const onConfirm = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(`/api/admin/venues/${data.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${session.user?.id}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log(response);
+      if (!response.ok) {
+        throw new Error('Failed to delete venue');
+      }
+
+      setOpen(false); // Close the modal
+      router.refresh(); // Refresh the page to update the list
+    } catch (error) {
+      console.error('Error deleting venue:', error);
+      alert('Failed to delete venue. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -48,7 +74,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           >
             <Edit className='mr-2 h-4 w-4' /> Update
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpen(true)}>
+          <DropdownMenuItem onClick={() => setOpen(true)} disabled={loading}>
             <Trash className='mr-2 h-4 w-4' /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

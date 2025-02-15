@@ -1,8 +1,8 @@
 import { authenticateAdmin } from '@/middlewares/auth';
 import prisma from '@/lib/utils/prisma-client';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 import { Address, Sport } from '@prisma/client';
+import { deleteS3Image } from '@/lib/utils/s3-operations';
 
 interface VenueRequest {
   name?: string;
@@ -10,10 +10,9 @@ interface VenueRequest {
   sports?: Sport[];
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(req: Request, context: { params: { id: string } }) {
   return await authenticateAdmin(req, async () => {
-    // const { id } = await context.params; // Get the venue ID from the URL
-    const id = req.nextUrl.pathname.split('/').pop();
+    const { id } = await context.params; // Get the venue ID from the URL
     const { name, address, sports }: VenueRequest = await req.json();
 
     const updateData: { [key: string]: any } = {};
@@ -82,22 +81,31 @@ export async function PATCH(req: NextRequest) {
   });
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(
+  req: Request,
+  context: { params: { id: string } }
+) {
   return await authenticateAdmin(req, async () => {
-    // const { id } = await context.params;
-    const id = req.nextUrl.pathname.split('/').pop();
+    const { id } = context.params;
 
     try {
       // Fetch the venue to get its related address ID
       const venue = await prisma.venue.findUnique({
         where: { id },
-        select: { addressId: true }
+        select: { addressId: true, images: true }
       });
 
       if (!venue) {
         return NextResponse.json(
           { error: `Venue with ID ${id} not found.` },
           { status: 404 }
+        );
+      }
+      console.log(venue.images);
+      //Delete all images from s3
+      if (venue.images && venue.images.length > 0) {
+        await Promise.all(
+          venue.images.map(async (imageUrl) => deleteS3Image(imageUrl))
         );
       }
 

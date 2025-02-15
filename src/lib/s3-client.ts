@@ -1,12 +1,9 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 export const s3 = new S3Client({
-  region: process.env.REGION as string,
-  endpoint: process.env.ENDPOINT as string,
+  region: process.env.NEXT_PUBLIC_AWS_REGION!,
   credentials: {
-    accessKeyId: process.env.ACCESS_KEY_ID as string,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY as string
+    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY!
   }
 });
-
-export const putObjectCommand = PutObjectCommand;

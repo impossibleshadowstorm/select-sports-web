@@ -1,6 +1,6 @@
-import prisma from "@/lib/utils/prisma-client";
-import { Sport } from "@prisma/client";
-import { NextResponse } from "next/server";
+import prisma from '@/lib/utils/prisma-client';
+import { Sport } from '@prisma/client';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
@@ -10,8 +10,8 @@ export async function GET() {
   } catch (error: any) {
     return NextResponse.json(
       {
-        message: "Unable to get the list of sports",
-        error: `Error: ${error.message}`,
+        message: 'Unable to get the list of sports',
+        error: `Error: ${error.message}`
       },
       { status: 500 }
     );
