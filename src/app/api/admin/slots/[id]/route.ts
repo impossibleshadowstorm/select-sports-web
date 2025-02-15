@@ -15,6 +15,51 @@ interface RouteParams {
   id: string;
 }
 
+// Fetch a single slot with authentication
+export async function GET(
+  req: NextRequest,
+  { params }: { params: RouteParams }
+): Promise<NextResponseType> {
+  return await authenticateAdmin(req, async () => {
+    try {
+      const { id: slotId } = params;
+
+      // Ensure slot ID is provided
+      if (!slotId) {
+        return NextResponse.json(
+          { error: 'Slot ID is required in the route parameters.' },
+          { status: 400 }
+        );
+      }
+
+      // Fetch the slot from the database
+      const slot = await prisma.slot.findUnique({
+        where: { id: slotId },
+        include: {
+          venue: true, // Include venue details
+          bookings: true // Include bookings if needed
+        }
+      });
+
+      if (!slot) {
+        return NextResponse.json(
+          { message: `Slot with ID ${slotId} not found.` },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ data: slot }, { status: 200 });
+    } catch (error: any) {
+      return NextResponse.json(
+        {
+          message: 'Failed to fetch the slot.',
+          error: `Error: ${error.message}`
+        },
+        { status: 500 }
+      );
+    }
+  });
+}
 // Update a Slot
 export async function PATCH(
   req: NextRequest,

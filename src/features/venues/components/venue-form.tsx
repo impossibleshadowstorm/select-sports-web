@@ -103,10 +103,12 @@ export default function VenueForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const body = {
       ...values,
-      images: values.images.map((image: File) => image.name),
+      images: values.images.filter(
+        (img: any) => typeof img === 'string' && img.startsWith('https')
+      ),
       address: { ...values.address, state: values.state }
     };
-
+    console.log(JSON.stringify(body));
     startTransition(async () => {
       try {
         const response: any = await authorizedPost(
@@ -147,11 +149,25 @@ export default function VenueForm({
                     <FormLabel>Images</FormLabel>
                     <FormControl>
                       <FileUploader
-                        value={field.value}
-                        onValueChange={field.onChange}
+                        value={(field.value ?? []).map(
+                          (image: string | { url: string }) =>
+                            typeof image === 'string' ? { url: image } : image
+                        )}
+                        onValueChange={(files) =>
+                          form.setValue('images', [
+                            ...(form.getValues('images') ?? []),
+                            ...files
+                          ])
+                        }
                         maxFiles={4}
                         maxSize={4 * 1024 * 1024}
                         disabled={loading}
+                        onUpload={async (uploadedUrls) => {
+                          form.setValue('images', [
+                            ...(form.getValues('images') ?? []),
+                            ...uploadedUrls
+                          ]);
+                        }}
                         // progresses={progresses}
                         // pass the onUpload function here for direct upload
                         // onUpload={uploadFiles}

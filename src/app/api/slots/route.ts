@@ -7,7 +7,21 @@ export async function GET(req: NextRequest): Promise<NextResponseType> {
     const slots = await prisma.slot.findMany({
       include: {
         sport: true,
-        venue: true
+        venue: true,
+        bookings: {
+          where: {
+            status: 'CONFIRMED'
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        }
       }
     });
 
