@@ -122,6 +122,7 @@ interface VenueRequestBody {
 
 export async function POST(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
+    // TODO: Get locationUrl and Venue Amenities as well
     const { name, address, sports, description, images }: VenueRequestBody =
       await req.json();
 

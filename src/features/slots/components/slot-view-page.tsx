@@ -12,6 +12,8 @@ export default async function SlotViewPage({ slotId }: TSlotViewPageProps) {
   let pageTitle = 'Create New Slot';
 
   const { data: availableSports } = await get(`/sports`);
+  const { data: availableVenues } = await get(`/venues`);
+
   if (slotId !== 'new') {
     const response = await get(`/slots/${slotId}`);
     slot = response.data;
@@ -25,6 +27,7 @@ export default async function SlotViewPage({ slotId }: TSlotViewPageProps) {
     <SlotForm
       initialData={slot}
       availableSports={availableSports}
+      availableVenues={availableVenues}
       pageTitle={pageTitle}
     />
   );

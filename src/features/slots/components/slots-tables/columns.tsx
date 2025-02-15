@@ -52,22 +52,19 @@ export const columns: ColumnDef<Slot>[] = [
     cell: ({ row }) => new Date(row.original.endTime).toLocaleString()
   },
   {
+    accessorKey: 'bookings',
+    header: 'Booked Users',
+    cell: ({ row }) => {
+      return row.original?.bookings?.length;
+    }
+  },
+  {
     accessorKey: 'maxPlayer',
     header: 'Max Players'
   },
   {
     accessorKey: 'status',
     header: 'Status'
-  },
-  {
-    accessorKey: 'bookings',
-    header: 'Booked Users',
-    cell: ({ row }) => {
-      const bookedUsers = row.original.bookings
-        .map((b) => b.user.name)
-        .join(', ');
-      return bookedUsers || 'No bookings';
-    }
   },
   {
     id: 'actions',

@@ -10,8 +10,7 @@
 // if current time is greater then 12 hours then only complete refund else 50% deduction.
 // update the status as cancelled.
 import prisma from '@/lib/utils/prisma-client';
-import { NextRequest, NextResponse as NextResponseType } from 'next/server';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { parse } from 'url';
@@ -24,9 +23,9 @@ interface RouteParams {
 export async function GET(
   req: NextRequest,
   { params }: { params: RouteParams }
-): Promise<NextResponseType> {
+) {
   try {
-    const { id: slotId } = params;
+    const { id: slotId } = await params;
 
     // Ensure slot ID is provided
     if (!slotId) {
@@ -40,8 +39,15 @@ export async function GET(
     const slot = await prisma.slot.findUnique({
       where: { id: slotId },
       include: {
-        venue: true, // Include venue details
-        bookings: true // Include bookings if needed
+        venue: true,
+        bookings: true,
+        team1: true,
+        team2: true,
+        host: {
+          include: {
+            user: true
+          }
+        }
       }
     });
 

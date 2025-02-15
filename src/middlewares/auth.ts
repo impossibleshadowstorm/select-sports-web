@@ -26,7 +26,6 @@ export const authenticateAdmin = async (
   try {
     // Decode the token to get user information
     const decoded = verifyToken(token.split(' ')[1]);
-    console.log(decoded);
     if (!decoded) {
       return NextResponse.json(
         { message: 'Unauthorized, invalid token' },

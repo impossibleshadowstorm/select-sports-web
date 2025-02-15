@@ -20,13 +20,19 @@ import {
 } from '@/components/ui/select';
 import { authorizedPost } from '@/lib/api-client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { SlotStatus, SlotType, Sport, Venue } from '@prisma/client';
+import { Slot, SlotStatus, SlotType, Sport, Venue } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+
+// TODO: start, end time and max player would be in one line
+// Team 1 and Team 2 will as of different section and each will have Name and Color Selector
+// Sports will be listed as a select dropdown menu
+// Venues will be listed as a select dropdown menu
+// Host must also be selectable [Note: create a host endpoint to get all the host and an endpoint to create a host]
 
 // Validation Schema
 const formSchema = z.object({
@@ -37,16 +43,20 @@ const formSchema = z.object({
   status: z.nativeEnum(SlotStatus),
   sportId: z.string().min(1, 'Sport is required.'),
   venueId: z.string().min(1, 'Venue is required.'),
-  team1Id: z.string().optional(),
-  team2Id: z.string().optional(),
+  team1Name: z.string().min(1, 'Team1 Name must be od minimum 5 Characters.'),
+  team1Color: z.string().min(7, 'Team2 Color is required.'),
+  team2Name: z.string().min(5, 'Team2 Name must be od minimum 5 Characters.'),
+  team2Color: z.string().min(7, 'Team2 Color is required.'),
   hostId: z.string().optional()
 });
 
 export default function SlotForm({
+  initialData,
   availableSports,
   availableVenues,
   pageTitle
 }: {
+  initialData: Slot | null;
   availableSports: Sport[];
   availableVenues: Venue[];
   pageTitle: string;
@@ -55,20 +65,24 @@ export default function SlotForm({
   const router = useRouter();
   const [loading, startTransition] = useTransition();
 
+  const defaultValues = {
+    startTime: initialData?.startTime ? initialData?.startTime : '',
+    endTime: initialData?.endTime ? initialData?.endTime?.toString() : '',
+    maxPlayer: initialData?.maxPlayer || 1,
+    slotType: SlotType.MATCH,
+    status: SlotStatus.AVAILABLE,
+    sportId: initialData?.sportId || '',
+    venueId: initialData?.sportId || '',
+    team1Name: initialData?.team1?.name || '',
+    team1Color: initialData?.team1?.color || '',
+    team2Name: initialData?.team2?.name || '',
+    team2Color: initialData?.team2?.color || '',
+    hostId: ''
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      startTime: '',
-      endTime: '',
-      maxPlayer: 10,
-      slotType: SlotType.MATCH,
-      status: SlotStatus.AVAILABLE,
-      sportId: '',
-      venueId: '',
-      team1Id: '',
-      team2Id: '',
-      hostId: ''
-    }
+    values: defaultValues
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -103,6 +117,7 @@ export default function SlotForm({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+            {/* Start Time */}
             <FormField
               control={form.control}
               name='startTime'
@@ -121,6 +136,7 @@ export default function SlotForm({
               )}
             />
 
+            {/* End time */}
             <FormField
               control={form.control}
               name='endTime'
@@ -139,6 +155,7 @@ export default function SlotForm({
               )}
             />
 
+            {/* Max Player */}
             <FormField
               control={form.control}
               name='maxPlayer'
@@ -152,14 +169,19 @@ export default function SlotForm({
                 </FormItem>
               )}
             />
-            {/* 
+            {/* Sports */}
+
             <FormField
               control={form.control}
               name='sportId'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sport</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={initialData !== null}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder='Select Sport' />
@@ -176,15 +198,21 @@ export default function SlotForm({
                   <FormMessage />
                 </FormItem>
               )}
-            /> */}
-            {/* 
+            />
+
+            {/* Venues Selection */}
+
             <FormField
               control={form.control}
               name='venueId'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Venue</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={initialData !== null}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder='Select Venue' />
@@ -201,7 +229,7 @@ export default function SlotForm({
                   <FormMessage />
                 </FormItem>
               )}
-            /> */}
+            />
 
             <Button type='submit' disabled={loading}>
               Add Slot

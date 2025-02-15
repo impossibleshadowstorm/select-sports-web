@@ -32,6 +32,7 @@ export async function GET(req: AuthenticatedRequest) {
         );
       }
 
+      // TODO: update all the stats here..
       return NextResponse.json(
         {
           data: {

@@ -246,6 +246,8 @@ async function checkVenueExistence(venueId: string) {
   return { isValid: true };
 }
 
+// TODO: Same time and slots doesn't give a correct error message instead it throws unknown error
+// TODO: It should not accept previous date and time. at least date time should be 1 week later.
 // Create a Slot with Teams
 export async function POST(req: AuthenticatedRequest) {
   return await authenticateAdmin(req, async () => {
@@ -313,7 +315,7 @@ export async function POST(req: AuthenticatedRequest) {
         if (overlappingSlots.length > 0) {
           throw new Error('The slot overlaps with an existing slot.');
         }
-        console.log('At Team 1');
+
         // Create Team 1
         const createdTeam1 = await prisma.team.create({
           data: {
@@ -321,8 +323,7 @@ export async function POST(req: AuthenticatedRequest) {
             color: team1.color
           }
         });
-        console.log(createdTeam1);
-        console.log('At Team 2');
+
         // Create Team 2
         const createdTeam2 = await prisma.team.create({
           data: {
@@ -330,7 +331,7 @@ export async function POST(req: AuthenticatedRequest) {
             color: team2.color
           }
         });
-        console.log(createdTeam2);
+
         // Create Slot
         const slot = await prisma.slot.create({
           data: {

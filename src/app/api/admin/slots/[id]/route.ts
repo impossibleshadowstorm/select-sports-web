@@ -22,7 +22,7 @@ export async function GET(
 ): Promise<NextResponseType> {
   return await authenticateAdmin(req, async () => {
     try {
-      const { id: slotId } = params;
+      const { id: slotId } = await params;
 
       // Ensure slot ID is provided
       if (!slotId) {
@@ -36,8 +36,15 @@ export async function GET(
       const slot = await prisma.slot.findUnique({
         where: { id: slotId },
         include: {
-          venue: true, // Include venue details
-          bookings: true // Include bookings if needed
+          venue: true,
+          bookings: true,
+          team1: true,
+          team2: true,
+          host: {
+            include: {
+              user: true
+            }
+          }
         }
       });
 
@@ -60,6 +67,11 @@ export async function GET(
     }
   });
 }
+
+// TODO: MaxPlayer is not being updated
+// TODO: Team name and color should also be updated
+// TODO: Host can also be updated
+// Note: one host can't be assigned to the slot having same date and same time.
 // Update a Slot
 export async function PATCH(
   req: NextRequest,
@@ -71,7 +83,7 @@ export async function PATCH(
       const { startTime, endTime, slotType, status } = body;
 
       // Extract slot ID from route parameters
-      const { id: slotId } = params;
+      const { id: slotId } = await params;
 
       // Ensure the slot ID is valid
       if (!slotId) {
@@ -162,6 +174,7 @@ export async function PATCH(
   });
 }
 
+// TODO: WARNING: Please verify this for now.
 // Delete a Slot
 export async function DELETE(
   req: NextRequest,
@@ -170,7 +183,7 @@ export async function DELETE(
   return await authenticateAdmin(req, async () => {
     try {
       // Extract slot ID from route parameters
-      const { id: slotId } = params;
+      const { id: slotId } = await params;
 
       // Ensure slot ID is provided
       if (!slotId) {
@@ -183,7 +196,7 @@ export async function DELETE(
       // Check if the slot exists
       const existingSlot = await prisma.slot.findUnique({
         where: { id: slotId },
-        include: { bookings: true } // Include related bookings to check associations
+        include: { bookings: true }
       });
 
       if (!existingSlot) {

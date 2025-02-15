@@ -33,6 +33,7 @@ enum SlotStatus {
   AVAILABLE
   BOOKED
   CANCELLED
+  EXECUTED
 }
 
 enum AvailableSports {
@@ -127,6 +128,7 @@ model Address {
   state      AvailableStates
   postalCode String
   country    String          @default("INDIA")
+  nearby     String?
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   User       User?
@@ -157,6 +159,7 @@ model Venue {
   updatedAt   DateTime         @updatedAt
   images      String[]
   description String
+  locationUrl String
   amenities   VenueAmenities[]
 
   address   Address @relation(fields: [addressId], references: [id])
@@ -179,7 +182,7 @@ model Sport {
 }
 
 model Slot {
-  id        String     @id @default(uuid()) @db.Uuid 
+  id        String     @id @default(uuid()) @db.Uuid
   startTime DateTime
   endTime   DateTime
   maxPlayer Int
@@ -187,7 +190,7 @@ model Slot {
   status    SlotStatus @default(AVAILABLE)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  
+
   bookings Booking[]
   sport    Sport     @relation(fields: [sportId], references: [id])
   sportId  String    @db.Uuid
