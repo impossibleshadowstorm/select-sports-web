@@ -3,11 +3,11 @@ import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
 import { Slot } from '@prisma/client';
 
-type SlotWithBookings = Slot & {
+export type SlotWithBookings = Slot & {
   bookings: { user: { name: string; email: string } }[];
 };
 
-export const columns: ColumnDef<Slot>[] = [
+export const columns: ColumnDef<SlotWithBookings>[] = [
   // {
   //   accessorKey: 'name',
   //   header: 'Name'

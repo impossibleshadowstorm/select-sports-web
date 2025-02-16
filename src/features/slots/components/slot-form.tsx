@@ -56,7 +56,7 @@ export default function SlotForm({
   availableVenues,
   pageTitle
 }: {
-  initialData: Slot | null;
+  initialData: any;
   availableSports: Sport[];
   availableVenues: Venue[];
   pageTitle: string;

@@ -1,7 +1,7 @@
 import prisma from '@/lib/utils/prisma-client';
 import { authenticateAdmin } from '../../../../../middlewares/auth';
 import { NextResponse } from 'next/server';
-import { SlotType, SlotStatus } from '@prisma/client';
+import { SlotType, SlotStatus, Team } from '@prisma/client';
 import { NextRequest, NextResponse as NextResponseType } from 'next/server';
 
 interface SlotRequestBody {
@@ -9,23 +9,16 @@ interface SlotRequestBody {
   endTime?: string;
   slotType?: SlotType;
   status?: SlotStatus;
-  team1?: string;
-  team2?: string;
+  team1?: Team;
+  team2?: Team;
   hostId?: string;
 }
 
-interface RouteParams {
-  id: string;
-}
-
 // Fetch a single slot with authentication
-export async function GET(
-  req: NextRequest,
-  { params }: { params: RouteParams }
-): Promise<NextResponseType> {
+export async function GET(req: NextRequest): Promise<NextResponseType> {
   return await authenticateAdmin(req, async () => {
     try {
-      const { id: slotId } = await params;
+      const slotId = req.nextUrl.pathname.split('/').pop();
 
       // Ensure slot ID is provided
       if (!slotId) {
@@ -72,18 +65,14 @@ export async function GET(
 }
 
 // Update a Slot
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: RouteParams }
-): Promise<NextResponseType> {
+export async function PATCH(req: NextRequest): Promise<NextResponseType> {
   return await authenticateAdmin(req, async () => {
     try {
       const body: SlotRequestBody = await req.json();
       const { startTime, endTime, slotType, status, team1, team2, hostId } =
         body;
 
-      // Extract slot ID from route parameters
-      const { id: slotId } = await params;
+      const slotId = req.nextUrl.pathname.split('/').pop();
 
       if (!slotId) {
         return NextResponse.json(
@@ -195,14 +184,11 @@ export async function PATCH(
 }
 
 // Delete a Slot
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: RouteParams }
-): Promise<NextResponseType> {
+export async function DELETE(req: NextRequest): Promise<NextResponseType> {
   return await authenticateAdmin(req, async () => {
     try {
       // Extract slot ID from route parameters
-      const { id: slotId } = await params;
+      const slotId = req.nextUrl.pathname.split('/').pop();
 
       // Ensure slot ID is provided
       if (!slotId) {

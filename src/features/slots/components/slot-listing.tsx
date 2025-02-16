@@ -1,7 +1,6 @@
 import { searchParamsCache } from '@/lib/searchparams';
 import { DataTable as SlotTable } from '@/components/ui/table/data-table';
-import { columns } from './slots-tables/columns';
-import { Slot } from '@prisma/client';
+import { columns, SlotWithBookings } from './slots-tables/columns';
 import { get } from '@/lib/api-client';
 
 type SlotListingPage = {};
@@ -22,9 +21,9 @@ export default async function SlotListingPage({}: SlotListingPage) {
   };
 
   const response = await get('/slots/');
-  const slots: Slot[] = response.data;
+  const slots: SlotWithBookings[] = response.data;
   return (
-    <SlotTable<Slot, unknown>
+    <SlotTable<SlotWithBookings, unknown>
       columns={columns}
       data={slots}
       totalItems={slots.length}

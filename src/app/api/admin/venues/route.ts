@@ -2,7 +2,7 @@ import { authenticateAdmin } from '@/middlewares/auth';
 import prisma from '@/lib/utils/prisma-client';
 import { validateRequiredFields } from '@/lib/utils/validator';
 import { NextResponse } from 'next/server';
-import { AvailableStates } from '@prisma/client';
+import { AvailableStates, VenueAmenities } from '@prisma/client';
 import { Address } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 
@@ -11,6 +11,8 @@ interface VenueRequestBody {
   address: Address;
   sports: string[];
   images: string[];
+  locationUrl: string;
+  amenities: VenueAmenities[];
   description: string;
 }
 
@@ -123,8 +125,16 @@ interface VenueRequestBody {
 export async function POST(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
     // TODO: Get locationUrl and Venue Amenities as well
-    const { name, address, sports, description, images }: VenueRequestBody =
-      await req.json();
+    // Add validation of url and amenities
+    const {
+      name,
+      address,
+      sports,
+      description,
+      images,
+      amenities,
+      locationUrl
+    }: VenueRequestBody = await req.json();
 
     // Define required fields for Venue and Address validation
     const requiredFields = [
@@ -178,9 +188,11 @@ export async function POST(req: NextRequest) {
             create: address
           },
           images,
+          amenities,
           sports: {
             connect: sports.map((id) => ({ id: id }))
           },
+          locationUrl: '',
           description
         },
         include: {

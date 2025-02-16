@@ -15,17 +15,10 @@ import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { parse } from 'url';
 
-interface RouteParams {
-  id: string;
-}
-
 // Fetch a single slot with authentication
-export async function GET(
-  req: NextRequest,
-  { params }: { params: RouteParams }
-) {
+export async function GET(req: NextRequest) {
   try {
-    const { id: slotId } = await params;
+    const slotId = req.nextUrl.pathname.split('/').pop();
 
     // Ensure slot ID is provided
     if (!slotId) {

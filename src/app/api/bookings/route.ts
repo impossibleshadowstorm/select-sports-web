@@ -3,13 +3,14 @@ import { authenticate } from '../../../middlewares/auth';
 import { NextResponse } from 'next/server';
 import { SlotStatus, BookingStatus } from '@prisma/client';
 import { validateRequiredFields } from '@/lib/utils/validator';
+import { AuthenticatedRequest } from '@/lib/utils/request-type';
 
 interface RequestBody {
   slotId: string;
   userId: string;
 }
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: AuthenticatedRequest): Promise<NextResponse> {
   return await authenticate(req, async () => {
     try {
       const body: RequestBody = await req.json();
@@ -45,7 +46,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         data: {
           slot: { connect: { id: slotId } },
           user: { connect: { id: userId } },
-          status: BookingStatus.PENDING
+          status: BookingStatus.CONFIRMED
         }
       });
       // TODO: Update slot status to `BOOKED` once the payment is confirmed (you can trigger this part after payment)
@@ -55,7 +56,7 @@ export async function POST(req: Request): Promise<NextResponse> {
           status: BookingStatus.CONFIRMED
         },
         include: {
-          transaction: true // Including the slot details if you want
+          transaction: true
         }
       });
 

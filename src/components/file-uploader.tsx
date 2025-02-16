@@ -39,7 +39,8 @@ interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
    * @default undefined
    * @example onUpload={(files) => uploadFiles(files)}
    */
-  onUpload?: (files: File[]) => Promise<void>;
+  // onUpload?: (files: File[]) => Promise<void>;
+  onUpload?: (urls: string[]) => Promise<void>;
 
   /**
    * Progress of the uploaded files.
@@ -145,7 +146,9 @@ export function FileUploader(props: FileUploaderProps) {
       );
 
       // Filter out failed uploads
-      const successfulUploads = uploadedUrls.filter((url) => url !== null);
+      const successfulUploads = uploadedUrls.filter(
+        (url): url is string => url !== null
+      );
 
       if (onUpload) {
         if (successfulUploads.length === filesToUpload.length) {

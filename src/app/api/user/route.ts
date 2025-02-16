@@ -64,7 +64,7 @@ export async function GET(req: AuthenticatedRequest) {
       }
 
       // Exclude sensitive information like `pass`
-      const { pass, ...otherData } = user; // eslint-disable-line
+      const { password, ...otherData } = user; // eslint-disable-line
 
       // Return the authenticated user's data
       return NextResponse.json(

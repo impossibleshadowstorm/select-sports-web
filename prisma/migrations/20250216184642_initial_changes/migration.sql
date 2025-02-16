@@ -11,7 +11,7 @@ CREATE TYPE "PaymentStatus" AS ENUM ('PAID', 'UNPAID');
 CREATE TYPE "SlotType" AS ENUM ('PRACTICE', 'MATCH', 'TRAINING');
 
 -- CreateEnum
-CREATE TYPE "SlotStatus" AS ENUM ('AVAILABLE', 'BOOKED', 'CANCELLED');
+CREATE TYPE "SlotStatus" AS ENUM ('AVAILABLE', 'BOOKED', 'CANCELLED', 'EXECUTED');
 
 -- CreateEnum
 CREATE TYPE "AvailableSports" AS ENUM ('FOOTBALL');
@@ -63,6 +63,7 @@ CREATE TABLE "Address" (
     "state" "AvailableStates" NOT NULL,
     "postalCode" TEXT NOT NULL,
     "country" TEXT NOT NULL DEFAULT 'INDIA',
+    "nearby" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -95,6 +96,7 @@ CREATE TABLE "Venue" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "images" TEXT[],
     "description" TEXT NOT NULL,
+    "locationUrl" TEXT NOT NULL,
     "amenities" "VenueAmenities"[],
     "addressId" UUID NOT NULL,
 

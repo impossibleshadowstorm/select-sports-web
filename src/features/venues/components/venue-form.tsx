@@ -153,12 +153,14 @@ export default function VenueForm({
                           (image: string | { url: string }) =>
                             typeof image === 'string' ? { url: image } : image
                         )}
-                        onValueChange={(files) =>
-                          form.setValue('images', [
-                            ...(form.getValues('images') ?? []),
-                            ...files
-                          ])
-                        }
+                        onValueChange={(files) => {
+                          if (Array.isArray(files)) {
+                            form.setValue('images', [
+                              ...(form.getValues('images') ?? []),
+                              ...files
+                            ]);
+                          }
+                        }}
                         maxFiles={4}
                         maxSize={4 * 1024 * 1024}
                         disabled={loading}

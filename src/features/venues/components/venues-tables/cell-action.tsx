@@ -32,11 +32,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
       const response = await fetch(`/api/admin/venues/${data.id}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${session.user?.id}`,
+          Authorization: `Bearer ${session?.user?.id}`,
           'Content-Type': 'application/json'
         }
       });
-      console.log(response);
       if (!response.ok) {
         throw new Error('Failed to delete venue');
       }

@@ -15,21 +15,15 @@ interface SlotRequestBody {
   status?: SlotStatus;
 }
 
-interface RouteParams {
-  id: string;
-}
-
 export async function PATCH(
-  req: NextRequest,
-  { params }: { params: RouteParams }
+  req: NextRequest
+  // { params }: { params: RouteParams }
 ): Promise<NextResponseType> {
   return await authenticateAdmin(req, async () => {
     try {
+      const slotId = req.nextUrl.pathname.split('/').pop();
       const body: SlotRequestBody = await req.json();
       const { winningTeam } = body;
-
-      // Extract slot ID from route parameters
-      const { id: slotId } = await params;
 
       if (!slotId) {
         return NextResponse.json(

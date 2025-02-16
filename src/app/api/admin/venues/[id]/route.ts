@@ -1,6 +1,6 @@
 import { authenticateAdmin } from '@/middlewares/auth';
 import prisma from '@/lib/utils/prisma-client';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { Address, Sport } from '@prisma/client';
 import { deleteS3Image } from '@/lib/utils/s3-operations';
 
@@ -10,9 +10,9 @@ interface VenueRequest {
   sports?: Sport[];
 }
 
-export async function PATCH(req: Request, context: { params: { id: string } }) {
+export async function PATCH(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
-    const { id } = await context.params; // Get the venue ID from the URL
+    const id = req.nextUrl.pathname.split('/').pop();
     const { name, address, sports }: VenueRequest = await req.json();
 
     const updateData: { [key: string]: any } = {};
@@ -81,12 +81,9 @@ export async function PATCH(req: Request, context: { params: { id: string } }) {
   });
 }
 
-export async function DELETE(
-  req: Request,
-  context: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
-    const { id } = context.params;
+    const id = req.nextUrl.pathname.split('/').pop();
 
     try {
       // Fetch the venue to get its related address ID
@@ -101,7 +98,6 @@ export async function DELETE(
           { status: 404 }
         );
       }
-      console.log(venue.images);
       //Delete all images from s3
       if (venue.images && venue.images.length > 0) {
         await Promise.all(

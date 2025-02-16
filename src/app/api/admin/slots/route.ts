@@ -219,6 +219,10 @@ export async function POST(req: AuthenticatedRequest) {
           venue: { connect: { id: venueId } },
           team1: { connect: { id: createdTeam1.id } },
           team2: { connect: { id: createdTeam2.id } }
+        },
+        include: {
+          team1: true,
+          team2: true
         }
       });
 
@@ -226,8 +230,7 @@ export async function POST(req: AuthenticatedRequest) {
         {
           status: 'success',
           message: 'Slot and Teams created successfully.',
-          slot,
-          teams: [createdTeam1, createdTeam2]
+          data: slot
         },
         { status: 201 }
       );
