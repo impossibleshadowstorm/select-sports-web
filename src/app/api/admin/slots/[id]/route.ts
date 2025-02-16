@@ -9,6 +9,9 @@ interface SlotRequestBody {
   endTime?: string;
   slotType?: SlotType;
   status?: SlotStatus;
+  team1?: string;
+  team2?: string;
+  hostId?: string;
 }
 
 interface RouteParams {
@@ -68,10 +71,6 @@ export async function GET(
   });
 }
 
-// TODO: MaxPlayer is not being updated
-// TODO: Team name and color should also be updated
-// TODO: Host can also be updated
-// Note: one host can't be assigned to the slot having same date and same time.
 // Update a Slot
 export async function PATCH(
   req: NextRequest,
@@ -80,12 +79,12 @@ export async function PATCH(
   return await authenticateAdmin(req, async () => {
     try {
       const body: SlotRequestBody = await req.json();
-      const { startTime, endTime, slotType, status } = body;
+      const { startTime, endTime, slotType, status, team1, team2, hostId } =
+        body;
 
       // Extract slot ID from route parameters
       const { id: slotId } = await params;
 
-      // Ensure the slot ID is valid
       if (!slotId) {
         return NextResponse.json(
           { error: 'Slot ID is required in the route parameters.' },
@@ -93,7 +92,7 @@ export async function PATCH(
         );
       }
 
-      // Validate `slotType` if provided
+      // Validate `slotType`
       if (slotType && !Object.values(SlotType).includes(slotType)) {
         return NextResponse.json(
           {
@@ -103,7 +102,7 @@ export async function PATCH(
         );
       }
 
-      // Validate `status` if provided
+      // Validate `status`
       if (status && !Object.values(SlotStatus).includes(status)) {
         return NextResponse.json(
           {
@@ -113,9 +112,10 @@ export async function PATCH(
         );
       }
 
-      // Check if the slot exists
+      // Get existing slot details
       const existingSlot = await prisma.slot.findUnique({
-        where: { id: slotId }
+        where: { id: slotId },
+        include: { team1: true, team2: true }
       });
 
       if (!existingSlot) {
@@ -125,41 +125,61 @@ export async function PATCH(
         );
       }
 
-      // Check for overlapping slots only if `startTime` or `endTime` is updated
-      if (startTime || endTime) {
-        const overlappingSlots = await prisma.slot.findMany({
+      // Ensure host is not assigned to another slot with the same time
+      if (hostId) {
+        const existingHostSlot = await prisma.slot.findFirst({
           where: {
-            venueId: existingSlot.venueId,
-            id: { not: slotId }, // Exclude the current slot from overlap check
-            startTime: { lte: new Date(endTime || existingSlot.endTime) },
-            endTime: { gte: new Date(startTime || existingSlot.startTime) }
+            id: { not: slotId },
+            hostId: hostId,
+            startTime: new Date(startTime || existingSlot.startTime),
+            endTime: new Date(endTime || existingSlot.endTime)
           }
         });
 
-        if (overlappingSlots.length > 0) {
+        if (existingHostSlot) {
           return NextResponse.json(
-            { message: 'The updated slot overlaps with an existing slot.' },
+            {
+              message:
+                'This host is already assigned to another slot at the same time.'
+            },
             { status: 400 }
           );
         }
+      }
+
+      // Update team details
+      if (team1) {
+        await prisma.team.update({
+          where: { id: existingSlot.team1Id! },
+          data: {
+            ...(team1.name && { name: team1.name }),
+            ...(team1.color && { color: team1.color })
+          }
+        });
+      }
+
+      if (team2) {
+        await prisma.team.update({
+          where: { id: existingSlot.team2Id! },
+          data: {
+            ...(team2.name && { name: team2.name }),
+            ...(team2.color && { color: team2.color })
+          }
+        });
       }
 
       // Update the slot
       const updatedSlot = await prisma.slot.update({
         where: { id: slotId },
         data: {
-          ...(startTime && { startTime: new Date(startTime) }),
-          ...(endTime && { endTime: new Date(endTime) }),
           ...(slotType && { slotType }),
-          ...(status && { status })
+          ...(status && { status }),
+          ...(hostId && { hostId })
         }
       });
 
       return NextResponse.json(
-        {
-          message: 'Slot updated successfully.',
-          data: updatedSlot
-        },
+        { message: 'Slot updated successfully.', data: updatedSlot },
         { status: 200 }
       );
     } catch (error: any) {
@@ -174,7 +194,6 @@ export async function PATCH(
   });
 }
 
-// TODO: WARNING: Please verify this for now.
 // Delete a Slot
 export async function DELETE(
   req: NextRequest,
@@ -193,10 +212,10 @@ export async function DELETE(
         );
       }
 
-      // Check if the slot exists
+      // Check if the slot exists and fetch associated bookings
       const existingSlot = await prisma.slot.findUnique({
         where: { id: slotId },
-        include: { bookings: true }
+        include: { bookings: true, team1: true, team2: true }
       });
 
       if (!existingSlot) {
@@ -206,27 +225,47 @@ export async function DELETE(
         );
       }
 
-      // Check if the slot has bookings
+      // Check if the slot is already cancelled
+      if (existingSlot.status === SlotStatus.CANCELLED) {
+        return NextResponse.json(
+          { message: 'Slot is already cancelled.' },
+          { status: 200 }
+        );
+      }
+
+      // If the slot has bookings, do NOT update status or delete teams
       if (existingSlot.bookings && existingSlot.bookings.length > 0) {
         return NextResponse.json(
           {
-            message: `Cannot delete slot with ID ${slotId} as it has active bookings.`
+            message: `Cannot cancel slot with ID ${slotId} as it has active bookings.`
           },
           { status: 400 }
         );
       }
 
-      // Delete the slot
-      await prisma.slot.delete({ where: { id: slotId } });
+      // Update slot status to CANCELLED
+      await prisma.slot.update({
+        where: { id: slotId },
+        data: { status: SlotStatus.CANCELLED }
+      });
+
+      // Delete associated teams since no bookings exist
+      await prisma.team.deleteMany({
+        where: {
+          id: {
+            in: [existingSlot.team1Id!, existingSlot.team2Id!].filter(Boolean)
+          }
+        }
+      });
 
       return NextResponse.json(
-        { message: 'Slot deleted successfully.' },
+        { message: 'Slot cancelled successfully.' },
         { status: 200 }
       );
     } catch (error: any) {
       return NextResponse.json(
         {
-          message: 'Failed to delete the slot.',
+          message: 'Failed to cancel the slot.',
           error: `Error: ${error.message}`
         },
         { status: 500 }
