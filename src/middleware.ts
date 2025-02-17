@@ -10,8 +10,6 @@ import { authorizedGet } from './lib/api-client';
 const { auth } = NextAuth(authConfig);
 
 export default auth(async (req) => {
-  // Log the session data
-
   if (!req.auth) {
     const url = req.url.replace(req.nextUrl.pathname, '/');
     return Response.redirect(url);
