@@ -89,7 +89,7 @@ jobs:
       run: yarn build
 
     - name: 📦 Compress build files
-      run: tar -czf build.tar.gz .next public package.json yarn.lock .env
+      run: tar -czf build.tar.gz .next public package.json yarn.lock .env .
 
     - name: 🚀 Deploy to EC2
       uses: appleboy/scp-action@v0.1.7
