@@ -6,13 +6,10 @@ name: Node.js CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
-
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
@@ -20,16 +17,30 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v4
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v4
+    - name: 📂 Set working directory
+      run: cd select_sports
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: yarn install --frozen-lockfile
+        cache: 'yarn'
+    - name: 🛠 Install dependencies
+      run: yarn install --frozen-lockfile
+      working-directory: select_sports
     - name: Set DATABASE_URL from GitHub Secret
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: yarn run build
-    - run: pm2 restart select_sports
+      working-directory: select_sports
+    - name: 📂 rsync deployments
+      uses: burnett01/rsync-deployments@7.0.2
+      with:
+        switches: -avzr --delete
+        path: ./*
+        remote_path: /var/www/html/select_sports/
+        remote_host: https://13.127.122.36/
+        remote_user: ubuntu
+        remote_key: "${{ secrets.SSH_PRIVATE_KEY }}"
     # - run: npm test
