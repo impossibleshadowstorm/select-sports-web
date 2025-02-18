@@ -91,14 +91,14 @@ jobs:
       # - name: 📦 Compress build files
       #   run: tar -czf build.tar.gz ./
 
-      # - name: 🚀 Deploy to EC2
-      #   uses: appleboy/scp-action@v0.1.7
-      #   with:
-      #     host: ${{ secrets.EC2_HOST }}
-      #     username: ubuntu
-      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
-      #     source: "build.tar.gz"
-      #     target: "/var/www/select_sports"
+      - name: 🚀 Copy .env file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: ".env"
+          target: "/home/ubuntu/select_sports"
 
       - name: 📂 rsync deployments
         uses: burnett01/rsync-deployments@7.0.2
