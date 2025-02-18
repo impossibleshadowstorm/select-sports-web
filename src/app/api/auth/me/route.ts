@@ -26,7 +26,17 @@ export async function GET(req: AuthenticatedRequest) {
       // Fetch user data from the database (if you need to return user details)
       const user = await prisma.user.findUnique({
         where: { id },
-        select: { id: true, name: true, email: true, role: true } // Specify fields to return
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          phone: true,
+          age: true,
+          skillsRating: true,
+          isVerified: true,
+          isActive: true
+        }
       });
 
       if (!user) {
