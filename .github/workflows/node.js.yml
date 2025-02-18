@@ -88,28 +88,38 @@ jobs:
     - name: 🏗 Build Next.js App
       run: yarn build
 
-    - name: 📦 Compress build files
-      run: tar --warning=no-file-changed -czf build.tar.gz ./
+    # - name: 📦 Compress build files
+    #   run: tar -czf build.tar.gz ./
 
-    - name: 🚀 Deploy to EC2
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ubuntu
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "build.tar.gz"
-        target: "/var/www/select_sports"
+    # - name: 🚀 Deploy to EC2
+    #   uses: appleboy/scp-action@v0.1.7
+    #   with:
+    #     host: ${{ secrets.EC2_HOST }}
+    #     username: ubuntu
+    #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+    #     source: "build.tar.gz"
+    #     target: "/var/www/select_sports"
 
-    - name: 📂 Extract and restart app on EC2
-      uses: appleboy/ssh-action@v1.0.3
+    - name: 📂 rsync deployments
+      uses: burnett01/rsync-deployments@7.0.2
       with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ubuntu
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd /var/www/select_sports
-          tar -xzf build.tar.gz
-          rm -f build.tar.gz
-          npm i -g pm2
-          pm2 restart all || pm2 start yarn --name "select_sports" -- start
-          pm2 save
+        switches: -avzr --delete --progress --exclude=".git"
+        path: ./*
+        remote_path: /var/www/select_sports/
+        remote_host: ${{ secrets.EC2_HOST }}
+        remote_user: ubuntu
+        remote_key: "${{ secrets.SSH_PRIVATE_KEY }}"
+
+    # - name: 📂 Extract and restart app on EC2
+    #   uses: appleboy/ssh-action@v1.0.3
+    #   with:
+    #     host: ${{ secrets.EC2_HOST }}
+    #     username: ubuntu
+    #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+    #     script: |
+    #       cd /var/www/select_sports
+    #       tar -xzf build.tar.gz
+    #       rm -f build.tar.gz
+    #       npm i -g pm2
+    #       pm2 restart all || pm2 start yarn --name "select_sports" -- start
+    #       pm2 save
