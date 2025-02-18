@@ -106,7 +106,7 @@ jobs:
         switches: -avzr --delete --progress --exclude=".git"
         path: ./*
         remote_path: /var/www/select_sports/
-        remote_host: ${{ secrets.EC2_HOST }}
+        remote_host: ${{ secrets.EC2_DNS }}
         remote_user: ubuntu
         remote_key: "${{ secrets.SSH_PRIVATE_KEY }}"
 
