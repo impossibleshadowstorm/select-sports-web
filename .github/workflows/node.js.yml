@@ -56,7 +56,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x] # Use latest Node.js 22
+        node-version: [22.x]
 
     steps:
       - name: 🚚 Get latest code
@@ -67,9 +67,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-
-      # - name: 🛠 Install dependencies
-      #   run: yarn install --frozen-lockfile
 
       - name: 🔐 Create .env file
         run: |
