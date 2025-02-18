@@ -20,14 +20,14 @@ import {
 } from '@/components/ui/select';
 import { authorizedPost } from '@/lib/api-client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Slot, SlotStatus, SlotType, Sport, Venue } from '@prisma/client';
+import { SlotStatus, SlotType, Sport, Venue } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { format, utcToZonedTime } from 'date-fns';
+import { format } from 'date-fns';
 // TODO: start, end time and max player would be in one line
 // Team 1 and Team 2 will as of different section and each will have Name and Color Selector
 // Sports will be listed as a select dropdown menu
@@ -87,8 +87,6 @@ export default function SlotForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
       try {
-        console.log(values.startTime);
-        console.log(values.endTime);
         const formattedStartTime = format(
           new Date(values.startTime),
           "yyyy-MM-dd'T'HH:mm:ss"

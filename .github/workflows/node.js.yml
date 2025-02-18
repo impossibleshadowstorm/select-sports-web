@@ -44,7 +44,7 @@
 #         remote_key: "${{ secrets.SSH_PRIVATE_KEY }}"
 #     # - run: npm test
 
-name: Next.js CI/CD
+name: Select Sports CI/CD Pipeline
 
 on:
   push:
@@ -68,8 +68,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
 
-      - name: 🛠 Install dependencies
-        run: yarn install --frozen-lockfile
+      # - name: 🛠 Install dependencies
+      #   run: yarn install --frozen-lockfile
 
       - name: 🔐 Create .env file
         run: |
@@ -85,8 +85,8 @@ jobs:
           echo "NEXTAUTH_SECRET=${{ vars.NEXTAUTH_SECRET }}" >> .env
           echo "NEXT_PUBLIC_SITE_BACKEND_HOST=${{ vars.NEXT_PUBLIC_SITE_BACKEND_HOST }}" >> .env
 
-      - name: 🏗 Build Next.js App
-        run: yarn build
+      # - name: 🏗 Build Next.js App
+      #   run: yarn build
 
       # - name: 📦 Compress build files
       #   run: tar -czf build.tar.gz ./
@@ -103,7 +103,7 @@ jobs:
       - name: 📂 rsync deployments
         uses: burnett01/rsync-deployments@7.0.2
         with:
-          switches: -avzr --delete --progress --exclude=".git" --exclude="node_modules" --exclude=".next"
+          switches: -avzr --delete --progress --exclude=".git" --exclude="node_modules" --exclude=".next" --include=".env"
           path: ./*
           remote_path: /home/ubuntu/
           remote_host: ${{ secrets.EC2_DNS }}
@@ -113,10 +113,15 @@ jobs:
       - name: SSH into EC2 and Install Dependencies, Build & Restart App
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_DNS }}
+          host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            sudo apt update -y
+            sudo apt install nginx
+            wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
+            source ~/.bashrc
+            npm i -g pm2 yarn
             cd /home/ubuntu/select_sports
             yarn install --frozen-lockfile
             yarn build
