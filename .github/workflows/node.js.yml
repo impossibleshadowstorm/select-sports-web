@@ -103,7 +103,7 @@ jobs:
       - name: 📂 rsync deployments
         uses: burnett01/rsync-deployments@7.0.2
         with:
-          switches: -avzr --delete --progress --include='*/'
+          switches: -avzr --delete --progress --include='*/' --exclude=".git"
           path: ./*
           remote_path: /home/ubuntu/select_sports
           remote_host: ${{ secrets.EC2_DNS }}
