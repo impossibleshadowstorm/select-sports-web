@@ -105,7 +105,7 @@ jobs:
         with:
           switches: -avzr --delete --progress --exclude=".git" --exclude="node_modules" --exclude=".next" --include=".env"
           path: ./*
-          remote_path: /home/ubuntu/
+          remote_path: /home/ubuntu/select_sports
           remote_host: ${{ secrets.EC2_DNS }}
           remote_user: ubuntu
           remote_key: '${{ secrets.SSH_PRIVATE_KEY }}'
@@ -118,9 +118,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             sudo apt update -y
-            sudo apt install nginx
+            sudo apt install nginx -y
             wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
             source ~/.bashrc
+            nvm install node
             npm i -g pm2 yarn
             cd /home/ubuntu/select_sports
             yarn install --frozen-lockfile
