@@ -19,7 +19,7 @@
 #     steps:
 #     - name: 🚚 Get latest code
 #       uses: actions/checkout@v4
-    
+
 #     - name: Use Node.js ${{ matrix.node-version }}
 #       uses: actions/setup-node@v4
 #       with:
@@ -48,7 +48,7 @@ name: Next.js CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
 
 jobs:
   build-and-deploy:
@@ -59,56 +59,69 @@ jobs:
         node-version: [22.x] # Use latest Node.js 22
 
     steps:
-    - name: 🚚 Get latest code
-      uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
 
-    - name: 🛠 Install dependencies
-      run: yarn install --frozen-lockfile
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
 
-    - name: 🔐 Create .env file
-      run: |
-        touch .env
-        echo "DATABASE_URL=${{ vars.DATABASE_URL }}" >> .env
-        echo "JWT_SECRET=${{ vars.JWT_SECRET }}" >> .env
-        echo "OTP_EXPIRATION_MINUTES=${{ vars.OTP_EXPIRATION_MINUTES }}" >> .env
-        echo "EMAIL_USER=${{ vars.EMAIL_USER }}" >> .env
-        echo "EMAIL_PASSWORD=${{ vars.EMAIL_PASSWORD }}" >> .env
-        echo "AUTH_SECRET=${{ vars.AUTH_SECRET }}" >> .env
-        echo "NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}" >> .env
-        echo "AUTH_TRUST_HOST=${{ vars.AUTH_TRUST_HOST }}" >> .env
-        echo "NEXTAUTH_SECRET=${{ vars.NEXTAUTH_SECRET }}" >> .env
-        echo "NEXT_PUBLIC_SITE_BACKEND_HOST=${{ vars.NEXT_PUBLIC_SITE_BACKEND_HOST }}" >> .env
+      - name: 🛠 Install dependencies
+        run: yarn install --frozen-lockfile
 
-    - name: 🏗 Build Next.js App
-      run: yarn build
+      - name: 🔐 Create .env file
+        run: |
+          touch .env
+          echo "DATABASE_URL=${{ vars.DATABASE_URL }}" >> .env
+          echo "JWT_SECRET=${{ vars.JWT_SECRET }}" >> .env
+          echo "OTP_EXPIRATION_MINUTES=${{ vars.OTP_EXPIRATION_MINUTES }}" >> .env
+          echo "EMAIL_USER=${{ vars.EMAIL_USER }}" >> .env
+          echo "EMAIL_PASSWORD=${{ vars.EMAIL_PASSWORD }}" >> .env
+          echo "AUTH_SECRET=${{ vars.AUTH_SECRET }}" >> .env
+          echo "NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}" >> .env
+          echo "AUTH_TRUST_HOST=${{ vars.AUTH_TRUST_HOST }}" >> .env
+          echo "NEXTAUTH_SECRET=${{ vars.NEXTAUTH_SECRET }}" >> .env
+          echo "NEXT_PUBLIC_SITE_BACKEND_HOST=${{ vars.NEXT_PUBLIC_SITE_BACKEND_HOST }}" >> .env
 
-    # - name: 📦 Compress build files
-    #   run: tar -czf build.tar.gz ./
+      - name: 🏗 Build Next.js App
+        run: yarn build
 
-    # - name: 🚀 Deploy to EC2
-    #   uses: appleboy/scp-action@v0.1.7
-    #   with:
-    #     host: ${{ secrets.EC2_HOST }}
-    #     username: ubuntu
-    #     key: ${{ secrets.SSH_PRIVATE_KEY }}
-    #     source: "build.tar.gz"
-    #     target: "/var/www/select_sports"
+      # - name: 📦 Compress build files
+      #   run: tar -czf build.tar.gz ./
 
-    - name: 📂 rsync deployments
-      uses: burnett01/rsync-deployments@7.0.2
-      with:
-        switches: -avzr --delete --progress --exclude=".git"
-        path: ./*
-        remote_path: /home/ubuntu/
-        remote_host: ${{ secrets.EC2_DNS }}
-        remote_user: ubuntu
-        remote_key: "${{ secrets.SSH_PRIVATE_KEY }}"
+      # - name: 🚀 Deploy to EC2
+      #   uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.EC2_HOST }}
+      #     username: ubuntu
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     source: "build.tar.gz"
+      #     target: "/var/www/select_sports"
+
+      - name: 📂 rsync deployments
+        uses: burnett01/rsync-deployments@7.0.2
+        with:
+          switches: -avzr --delete --progress --exclude=".git" --exclude="node_modules" --exclude=".next"
+          path: ./*
+          remote_path: /home/ubuntu/
+          remote_host: ${{ secrets.EC2_DNS }}
+          remote_user: ubuntu
+          remote_key: '${{ secrets.SSH_PRIVATE_KEY }}'
+      
+      - name: SSH into EC2 and Install Dependencies, Build & Restart App
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_DNS }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/select_sports
+            yarn install --frozen-lockfile
+            yarn build
+            pm2 restart all || pm2 start yarn --name "select_sports" -- start 
+            pm2 save
 
     # - name: 📂 Extract and restart app on EC2
     #   uses: appleboy/ssh-action@v1.0.3
