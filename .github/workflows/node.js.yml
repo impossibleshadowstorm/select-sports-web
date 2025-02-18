@@ -103,7 +103,7 @@ jobs:
       - name: 📂 rsync deployments
         uses: burnett01/rsync-deployments@7.0.2
         with:
-          switches: -avzr --delete --progress --exclude=".git" --exclude="node_modules" --exclude=".next" --include=".env"
+          switches: -avzr --delete --progress --include='*/'
           path: ./*
           remote_path: /home/ubuntu/select_sports
           remote_host: ${{ secrets.EC2_DNS }}
@@ -127,7 +127,7 @@ jobs:
             cd /home/ubuntu/select_sports
             yarn install --frozen-lockfile
             yarn build
-            pm2 restart all || pm2 start yarn --name "select_sports" -- start 
+            pm2 restart all || pm2 start yarn --name "select_sports" -- start -p 3005
             pm2 save
 
     # - name: 📂 Extract and restart app on EC2
