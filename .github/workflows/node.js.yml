@@ -117,12 +117,6 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sudo apt update -y
-            sudo apt install nginx -y
-            wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
-            source ~/.bashrc
-            nvm install node
-            npm i -g pm2 yarn
             cd /home/ubuntu/select_sports
             yarn install --frozen-lockfile
             yarn build
