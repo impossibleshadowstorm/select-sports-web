@@ -6,20 +6,28 @@ import {
   validateRequiredFields
 } from '@/lib/utils/validator';
 import { NextResponse } from 'next/server';
-import { Role } from '@prisma/client';
+import { Role, Gender } from '@prisma/client';
 import {
   RegisterRequestBody,
   RegisterResponse
 } from '@/app/api/auth/register/route';
+import moment from 'moment-timezone';
 
 export const register = async (
   body: RegisterRequestBody,
   role: Role
 ): Promise<NextResponse> => {
-  const { name, email, password, phone, age } = body;
+  const { name, email, password, phone, dob, gender } = body;
 
   // Define required fields
-  const requiredFields = ['name', 'email', 'password', 'phone', 'age'];
+  const requiredFields = [
+    'name',
+    'email',
+    'password',
+    'phone',
+    'dob',
+    'gender'
+  ];
 
   // Validate fields
   const { isValid, missingFields } = validateRequiredFields(
@@ -53,6 +61,31 @@ export const register = async (
       );
     }
 
+    // Check if the state is part of AvailableStates enum
+    if (!Object.values(Gender).includes(gender as Gender)) {
+      return NextResponse.json(
+        {
+          message: `Invalid Gender. Allowed values are: ${Object.values(
+            Gender
+          ).join(', ')}.`
+        },
+        { status: 400 }
+      );
+    }
+
+    // Parse DOB (format: "24-01-2002")
+    const parsedDob = moment
+      .utc(dob, 'DD-MM-YYYY', true)
+      .startOf('day')
+      .toDate();
+
+    if (!moment(parsedDob).isValid()) {
+      return NextResponse.json<RegisterResponse>(
+        { message: 'Invalid date format. Use DD-MM-YYYY.' },
+        { status: 400 }
+      );
+    }
+
     // Check if the email already exists in the database
     const existingUser = await prisma.user.findUnique({
       where: { email }
@@ -72,7 +105,8 @@ export const register = async (
         email,
         phone,
         password: hashedPassword,
-        age: parseInt(age),
+        dob: parsedDob,
+        gender,
         role: body?.role ?? role
       }
     });

@@ -16,6 +16,8 @@ interface SlotRequestBody {
   sportId: string;
   maxPlayer: number;
   venueId: string;
+  price: number;
+  discountedPrice: number;
   team1: TeamData;
   team2: TeamData;
 }
@@ -87,7 +89,9 @@ export async function POST(req: AuthenticatedRequest) {
         'maxPlayer',
         'venueId',
         'team1',
-        'team2'
+        'team2',
+        'price',
+        'discountedPrice'
       ];
 
       const { isValid, missingFields } = validateRequiredFields(
@@ -104,8 +108,28 @@ export async function POST(req: AuthenticatedRequest) {
         );
       }
 
-      const { startTime, endTime, sportId, maxPlayer, venueId, team1, team2 } =
-        body;
+      const {
+        startTime,
+        endTime,
+        sportId,
+        maxPlayer,
+        venueId,
+        team1,
+        team2,
+        discountedPrice,
+        price
+      } = body;
+
+      if (price <= 0 || discountedPrice <= 0 || price <= discountedPrice) {
+        return NextResponse.json(
+          {
+            status: 'error',
+            message:
+              "Prices Can't be zero or negative/ Show Price Must be greater than or equal to Actual Price"
+          },
+          { status: 400 }
+        );
+      }
 
       // Validate date-time format
       const dateTimeValidation = validateDateTimeFormat(startTime, endTime);
@@ -121,7 +145,7 @@ export async function POST(req: AuthenticatedRequest) {
 
       // Ensure the startTime is at least 1 week from now
       const now = new Date();
-      const oneWeekLater = new Date(now.setDate(now.getDate() + 7));
+      const oneWeekLater = new Date(now.setDate(now.getDate() + 0));
 
       if (new Date(startTime) < oneWeekLater) {
         return NextResponse.json(
@@ -215,6 +239,8 @@ export async function POST(req: AuthenticatedRequest) {
           endTime: new Date(endTime),
           status: SlotStatus.AVAILABLE,
           maxPlayer: maxPlayer,
+          price,
+          discountedPrice,
           sport: { connect: { id: sportId } },
           venue: { connect: { id: venueId } },
           team1: { connect: { id: createdTeam1.id } },

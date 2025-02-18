@@ -32,7 +32,8 @@ export async function GET(req: AuthenticatedRequest) {
           email: true,
           role: true,
           phone: true,
-          age: true,
+          dob: true,
+          gender: true,
           skillsRating: true,
           isVerified: true,
           isActive: true

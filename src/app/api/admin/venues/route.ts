@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
           sports: {
             connect: sports.map((id) => ({ id: id }))
           },
-          locationUrl: '',
+          locationUrl,
           description
         },
         include: {

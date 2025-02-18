@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Role } from '@prisma/client';
+import { Role, Gender } from '@prisma/client';
 import { register } from '@/lib/utils/register-request';
 
 // Type definitions
@@ -8,7 +8,8 @@ export interface RegisterRequestBody {
   email: string;
   password: string;
   phone: string;
-  age: string;
+  dob: string; // Expected Format: DD-MM-YYYY
+  gender: Gender;
   role?: Role;
 }
 

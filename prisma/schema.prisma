@@ -13,6 +13,11 @@ enum Role {
   USER
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
 enum BookingStatus {
   CONFIRMED
   CANCELLED
@@ -103,8 +108,9 @@ model User {
   name         String
   password     String
   phone        String
-  age          Int
+  dob          DateTime?
   role         Role
+  gender       Gender
   skillsRating Int       @default(0)
   isVerified   Boolean   @default(false)
   isActive     Boolean   @default(true)
@@ -182,14 +188,16 @@ model Sport {
 }
 
 model Slot {
-  id        String     @id @default(uuid()) @db.Uuid
-  startTime DateTime
-  endTime   DateTime
-  maxPlayer Int
-  slotType  SlotType   @default(MATCH)
-  status    SlotStatus @default(AVAILABLE)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id              String     @id @default(uuid()) @db.Uuid
+  startTime       DateTime
+  endTime         DateTime
+  maxPlayer       Int
+  slotType        SlotType   @default(MATCH)
+  status          SlotStatus @default(AVAILABLE)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  price           Float
+  discountedPrice Float
 
   bookings Booking[]
   sport    Sport     @relation(fields: [sportId], references: [id])
