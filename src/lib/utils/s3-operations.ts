@@ -3,13 +3,7 @@ import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 export const uploadFileToS3 = async (file: File): Promise<string | void> => {
   try {
-    console.log(`Uploading file: ${file.name}, Size: ${file.size} Bytes`);
-
     const fileName = `${Date.now()}-${file.name}`;
-    console.log('File details:', file);
-    console.log('File name:', file.name);
-    console.log('File size:', file.size);
-    console.log('File type:', file.type);
 
     // Convert file to Uint8Array
     const arrayBuffer = await file.arrayBuffer();

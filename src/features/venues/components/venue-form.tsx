@@ -108,7 +108,6 @@ export default function VenueForm({
       ),
       address: { ...values.address, state: values.state }
     };
-    console.log(JSON.stringify(body));
     startTransition(async () => {
       try {
         const response: any = await authorizedPost(
@@ -343,7 +342,7 @@ export default function VenueForm({
               )}
             />
             <Button type='submit' disabled={loading}>
-              Add Venue
+              {initialData?.id ? 'Update Venue' : 'Add Venue'}
             </Button>
           </form>
         </Form>
