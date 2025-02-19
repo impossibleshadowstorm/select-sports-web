@@ -8,10 +8,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { authorizedDelete } from '@/lib/api-client';
 import { Slot } from '@prisma/client';
 import { Edit, MoreHorizontal, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface CellActionProps {
   data: Slot;
@@ -19,11 +21,21 @@ interface CellActionProps {
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   // eslint-disable-next-line
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
-  const onConfirm = async () => {};
+  const onConfirm = async () => {
+    setLoading(true);
+    const response = await authorizedDelete(
+      `/admin/slots/${data.id}`,
+      session?.user?.id!
+    );
+
+    setOpen(false); // Close the modal
+    router.refresh(); // Refresh the page to update the list
+  };
 
   return (
     <>
@@ -48,7 +60,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           >
             <Edit className='mr-2 h-4 w-4' /> Update
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpen(true)}>
+          <DropdownMenuItem onClick={() => setOpen(true)} disabled={loading}>
             <Trash className='mr-2 h-4 w-4' /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

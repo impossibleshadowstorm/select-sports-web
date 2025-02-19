@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { authorizedPost } from '@/lib/api-client';
+import { authorizedPost, authorizedPatch } from '@/lib/api-client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SlotStatus, SlotType, Sport, Venue } from '@prisma/client';
 import { useSession } from 'next-auth/react';
@@ -65,8 +65,12 @@ export default function SlotForm({
   const router = useRouter();
   const [loading, startTransition] = useTransition();
   const defaultValues = {
-    startTime: initialData?.startTime ? initialData?.startTime : '',
-    endTime: initialData?.endTime ? initialData?.endTime?.toString() : '',
+    startTime: initialData?.startTime
+      ? format(new Date(initialData.startTime), "yyyy-MM-dd'T'HH:mm")
+      : '',
+    endTime: initialData?.endTime
+      ? format(new Date(initialData.endTime), "yyyy-MM-dd'T'HH:mm")
+      : '',
     maxPlayer: initialData?.maxPlayer || 1,
     slotType: SlotType.MATCH,
     status: SlotStatus.AVAILABLE,
@@ -102,14 +106,22 @@ export default function SlotForm({
           team1: { name: values.team1Name, color: values.team1Color },
           team2: { name: values.team2Name, color: values.team2Color }
         };
-        const response = await authorizedPost(
-          '/admin/slots/',
-          session?.user?.id!,
-          formattedValues
-        );
 
-        if (response.status === 201) {
+        const response = (await (initialData?.id
+          ? authorizedPatch(
+              `/admin/slots/${initialData.id}`,
+              session?.user?.id!,
+              formattedValues
+            )
+          : authorizedPost(
+              '/admin/slots/',
+              session?.user?.id!,
+              formattedValues
+            ))) as { status: number; message: string };
+
+        if (response.status === 201 || response.status === 200) {
           toast.success(response.message);
+          console.log('successful patch');
           form.reset();
           router.push('/dashboard/slots');
         } else {
@@ -336,7 +348,7 @@ export default function SlotForm({
               </div>
             </div>
             <Button type='submit' disabled={loading}>
-              Add Slot
+              {initialData?.id ? 'Update Slot' : 'Add Slot'}
             </Button>
           </form>
         </Form>

@@ -10,8 +10,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sport } from '@prisma/client';
 import { Edit, MoreHorizontal, Trash } from 'lucide-react';
+import { authorizedDelete } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface CellActionProps {
   data: Sport;
@@ -19,11 +21,21 @@ interface CellActionProps {
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   // eslint-disable-next-line
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
-  const onConfirm = async () => {};
+  const onConfirm = async () => {
+    setLoading(true);
+    const response = await authorizedDelete(
+      `/admin/sports/${data.id}`,
+      session?.user?.id!
+    );
+
+    setOpen(false);
+    router.refresh();
+  };
 
   return (
     <>
