@@ -115,7 +115,7 @@ export default function VenueForm({
           session?.user?.id!,
           body
         );
-
+        console.log(response);
         if (response.status === 201) {
           toast.success(response.message);
           form.reset(defaultValues);
