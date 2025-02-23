@@ -28,6 +28,23 @@ enum BookingStatus {
 //   UNPAID
 // }
 
+enum PaymentMethod {
+  WALLET
+  RAZORPAY
+  STRIPE
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 enum SlotType {
   PRACTICE
   MATCH
@@ -119,7 +136,7 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  walletBalance Float @default(0.0) // User's wallet balance
+  walletBalance Float @default(0.0) // Wallet balance
 
   bookings           Booking[]
   address            Address?            @relation(fields: [addressId], references: [id])
@@ -127,7 +144,8 @@ model User {
   sportsProfile      SportsProfile?
   hostProfile        Host?
   teams              Team[]              @relation(name: "TeamUsers")
-  walletTransactions WalletTransaction[] // Relation with WalletTransaction
+  walletTransactions WalletTransaction[]
+  transactions       Transaction[]
 }
 
 model Address {
@@ -232,16 +250,40 @@ model Booking {
 }
 
 model Transaction {
-  id                  String        @id @default(uuid()) @db.Uuid
-  booking             Booking       @relation(fields: [bookingId], references: [id])
-  bookingId           String        @unique @db.Uuid
-  stripeTransactionId String        @unique
-  referenceId         String
+  id                  String             @id @default(uuid()) @db.Uuid
+  booking             Booking?           @relation(fields: [bookingId], references: [id])
+  bookingId           String?            @unique @db.Uuid
+  walletTransaction   WalletTransaction? @relation(name: "WalletTransaction_Transaction")
+  walletTransactionId String?            @unique @db.Uuid
+  stripeTransactionId String?            @unique
+  razorpayPaymentId   String?            @unique
+  razorpayOrderId     String?            @unique
+  referenceId         String?
   amount              Float
-  currency            String
+  currency            String             @default("INR")
   status              PaymentStatus
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  paymentMethod       PaymentMethod
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  user                User?              @relation(fields: [userId], references: [id])
+  userId              String?            @db.Uuid
+}
+
+model WalletTransaction {
+  id                String          @id @default(uuid()) @db.Uuid
+  user              User            @relation(fields: [userId], references: [id])
+  userId            String          @db.Uuid
+  transaction       Transaction?    @relation(name: "WalletTransaction_Transaction", fields: [transactionId], references: [id])
+  transactionId     String?         @unique @db.Uuid
+  razorpayPaymentId String?         @unique
+  razorpayOrderId   String?         @unique
+  razorpaySignature String?
+  amount            Float
+  currency          String          @default("INR")
+  status            PaymentStatus   @default(PENDING)
+  transactionType   TransactionType
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 model Host {
@@ -264,29 +306,4 @@ model Team {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model WalletTransaction {
-  id              String          @id @default(uuid()) @db.Uuid
-  user            User            @relation(fields: [userId], references: [id])
-  userId          String          @db.Uuid
-  transactionId   String          @unique
-  referenceId     String?
-  amount          Float
-  currency        String          @default("INR")
-  status          PaymentStatus   @default(PENDING)
-  transactionType TransactionType
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-}
-
-enum TransactionType {
-  CREDIT
-  DEBIT
-}
-
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
 }
