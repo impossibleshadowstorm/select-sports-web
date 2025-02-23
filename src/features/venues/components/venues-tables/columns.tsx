@@ -6,15 +6,22 @@ import { Venue } from '@prisma/client';
 export const columns: ColumnDef<Venue>[] = [
   {
     accessorKey: 'name',
-    header: 'Name'
+    header: 'Name',
+    // size: 120,
+    cell: ({ row }) => (
+      <div className='line-clamp-1 w-[170px] overflow-hidden text-ellipsis whitespace-pre-wrap'>
+        {row.original.name}
+      </div>
+    )
   },
   {
     accessorKey: 'description',
-    header: 'Description'
-  },
-  {
-    accessorKey: 'address.city',
-    header: 'CITY'
+    header: 'Description',
+    cell: ({ row }) => (
+      <div className='line-clamp-1 overflow-hidden text-ellipsis whitespace-pre-wrap'>
+        {row.original.description}
+      </div>
+    )
   },
   {
     accessorKey: 'address.postalCode',

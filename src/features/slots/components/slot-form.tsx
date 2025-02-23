@@ -47,7 +47,9 @@ const formSchema = z.object({
   team1Color: z.string().min(7, 'Team2 Color is required.'),
   team2Name: z.string().min(5, 'Team2 Name must be od minimum 5 Characters.'),
   team2Color: z.string().min(7, 'Team2 Color is required.'),
-  hostId: z.string().optional()
+  hostId: z.string().optional(),
+  price: z.number().nonnegative(),
+  discountedPrice: z.number().nonnegative()
 });
 
 export default function SlotForm({
@@ -80,7 +82,9 @@ export default function SlotForm({
     team1Color: initialData?.team1?.color || '',
     team2Name: initialData?.team2?.name || '',
     team2Color: initialData?.team2?.color || '',
-    hostId: ''
+    hostId: '',
+    price: initialData?.price || 100,
+    discountedPrice: initialData?.discountedPrice || 99
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -121,7 +125,6 @@ export default function SlotForm({
 
         if (response.status === 201 || response.status === 200) {
           toast.success(response.message);
-          console.log('successful patch');
           form.reset();
           router.push('/dashboard/slots');
         } else {
@@ -339,6 +342,49 @@ export default function SlotForm({
                           {...field}
                           value={field.value || '#000000'}
                           className='h-10 w-full'
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className='space-y-4 rounded-lg border p-4'>
+                <h3 className='text-center text-lg font-semibold'>Pricing</h3>
+                <FormField
+                  control={form.control}
+                  name='price'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Price</FormLabel>
+                      <FormControl>
+                        <Input
+                          type='number'
+                          disabled={loading}
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 0)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='discountedPrice'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discounted Price</FormLabel>
+                      <FormControl>
+                        <Input
+                          type='number'
+                          disabled={loading}
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 0)
+                          }
                         />
                       </FormControl>
                       <FormMessage />

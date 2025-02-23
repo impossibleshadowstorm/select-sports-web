@@ -69,6 +69,11 @@ export const columns: ColumnDef<SlotWithBookings>[] = [
   {
     id: 'actions',
     header: 'Actions',
-    cell: ({ row }) => <CellAction data={row.original} />
+    cell: ({ row }) =>
+      row.original.status !== 'CANCELLED' ? (
+        <CellAction data={row.original} />
+      ) : (
+        'N/A'
+      )
   }
 ];

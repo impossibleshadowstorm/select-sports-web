@@ -115,7 +115,6 @@ export default function VenueForm({
           session?.user?.id!,
           body
         );
-        console.log(response);
         if (response.status === 201) {
           toast.success(response.message);
           form.reset(defaultValues);
@@ -333,7 +332,7 @@ export default function VenueForm({
                     <Textarea
                       disabled={loading}
                       placeholder='Enter venue description'
-                      className='resize-none'
+                      className='max-h-[200px] min-h-[150px] resize-none'
                       {...field}
                     />
                   </FormControl>

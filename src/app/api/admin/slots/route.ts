@@ -22,6 +22,47 @@ interface SlotRequestBody {
   team2: TeamData;
 }
 
+export async function GET(req: AuthenticatedRequest) {
+  return await authenticateAdmin(req, async () => {
+    try {
+      const slots = await prisma.slot.findMany({
+        include: {
+          sport: true,
+          venue: {
+            include: {
+              address: true
+            }
+          },
+          bookings: {
+            include: {
+              user: true
+            }
+          }
+        },
+        orderBy: {
+          startTime: 'desc'
+        }
+      });
+
+      return NextResponse.json(
+        {
+          message: 'Slots fetched successfully.',
+          data: slots
+        },
+        { status: 200 }
+      );
+    } catch (error: any) {
+      return NextResponse.json(
+        {
+          message: 'Failed to fetch slots.',
+          error: `Error: ${error.message}`
+        },
+        { status: 500 }
+      );
+    }
+  });
+}
+
 // Expected Format: YYYY-MM-DDTHH:mm:ss
 const dateTimeFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 
