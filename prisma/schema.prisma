@@ -23,10 +23,10 @@ enum BookingStatus {
   CANCELLED
 }
 
-enum PaymentStatus {
-  PAID
-  UNPAID
-}
+// enum PaymentStatus {
+//   PAID
+//   UNPAID
+// }
 
 enum SlotType {
   PRACTICE
@@ -119,12 +119,15 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  bookings      Booking[]
-  address       Address?       @relation(fields: [addressId], references: [id])
-  addressId     String?        @unique @db.Uuid
-  sportsProfile SportsProfile?
-  hostProfile   Host?
-  teams         Team[]         @relation(name: "TeamUsers")
+  walletBalance Float @default(0.0) // User's wallet balance
+
+  bookings           Booking[]
+  address            Address?            @relation(fields: [addressId], references: [id])
+  addressId          String?             @unique @db.Uuid
+  sportsProfile      SportsProfile?
+  hostProfile        Host?
+  teams              Team[]              @relation(name: "TeamUsers")
+  walletTransactions WalletTransaction[] // Relation with WalletTransaction
 }
 
 model Address {
@@ -261,4 +264,29 @@ model Team {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id              String          @id @default(uuid()) @db.Uuid
+  user            User            @relation(fields: [userId], references: [id])
+  userId          String          @db.Uuid
+  transactionId   String          @unique
+  referenceId     String?
+  amount          Float
+  currency        String          @default("INR")
+  status          PaymentStatus   @default(PENDING)
+  transactionType TransactionType
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
 }
