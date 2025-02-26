@@ -64,31 +64,3 @@ export async function POST(req: AuthenticatedRequest) {
     }
   });
 }
-
-// export async function POST(req: AuthenticatedRequest) {
-//     return await authenticate(req, async () => {
-//       try {
-//         const { razorpay_payment_id } = await req.json();
-
-//         if (!razorpay_payment_id) {
-//           return NextResponse.json({ message: 'Missing payment ID.' }, { status: 400 });
-//         }
-
-//         // Fetch payment details from Razorpay
-//         const payment = await razorpay.payments.fetch(razorpay_payment_id);
-//     console.log(payment);
-//         if (payment.status !== 'captured') {
-//           return NextResponse.json({ message: 'Payment not successful.' }, { status: 400 });
-//         }
-
-//         return NextResponse.json({
-//           success: true,
-//           message: 'Payment verified and booking confirmed.',
-//           payment
-//         }, { status: 200 });
-
-//       } catch (error: any) {
-//         return NextResponse.json({ message: 'Error verifying payment.', error: error.message }, { status: 500 });
-//       }
-//     });
-//   }
