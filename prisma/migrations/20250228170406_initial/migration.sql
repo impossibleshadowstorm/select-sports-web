@@ -2,10 +2,19 @@
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');
 
 -- CreateEnum
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE');
+
+-- CreateEnum
 CREATE TYPE "BookingStatus" AS ENUM ('CONFIRMED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('PAID', 'UNPAID');
+CREATE TYPE "PaymentMethod" AS ENUM ('WALLET', 'RAZORPAY', 'STRIPE');
+
+-- CreateEnum
+CREATE TYPE "TransactionType" AS ENUM ('CREDIT', 'DEBIT');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
 
 -- CreateEnum
 CREATE TYPE "SlotType" AS ENUM ('PRACTICE', 'MATCH', 'TRAINING');
@@ -41,8 +50,9 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
-    "age" INTEGER NOT NULL,
+    "dob" TIMESTAMP(3),
     "role" "Role" NOT NULL,
+    "gender" "Gender" NOT NULL,
     "skillsRating" INTEGER NOT NULL DEFAULT 0,
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
@@ -50,6 +60,7 @@ CREATE TABLE "User" (
     "otpExpiresAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "walletBalance" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
     "addressId" UUID,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -125,6 +136,8 @@ CREATE TABLE "Slot" (
     "status" "SlotStatus" NOT NULL DEFAULT 'AVAILABLE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
+    "discountedPrice" DOUBLE PRECISION NOT NULL,
     "sportId" UUID NOT NULL,
     "venueId" UUID NOT NULL,
     "team1Id" UUID,
@@ -150,16 +163,39 @@ CREATE TABLE "Booking" (
 -- CreateTable
 CREATE TABLE "Transaction" (
     "id" UUID NOT NULL,
-    "bookingId" UUID NOT NULL,
-    "stripeTransactionId" TEXT NOT NULL,
-    "referenceId" TEXT NOT NULL,
+    "bookingId" UUID,
+    "walletTransactionId" UUID,
+    "stripeTransactionId" TEXT,
+    "razorpayPaymentId" TEXT,
+    "razorpayOrderId" TEXT,
+    "referenceId" TEXT,
     "amount" DOUBLE PRECISION NOT NULL,
-    "currency" TEXT NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'INR',
     "status" "PaymentStatus" NOT NULL,
+    "paymentMethod" "PaymentMethod" NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" UUID,
+
+    CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "WalletTransaction" (
+    "id" UUID NOT NULL,
+    "userId" UUID NOT NULL,
+    "transactionId" UUID,
+    "razorpayPaymentId" TEXT,
+    "razorpayOrderId" TEXT,
+    "razorpaySignature" TEXT,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'INR',
+    "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
+    "transactionType" "TransactionType" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "WalletTransaction_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -218,7 +254,25 @@ CREATE UNIQUE INDEX "Sport_name_key" ON "Sport"("name");
 CREATE UNIQUE INDEX "Transaction_bookingId_key" ON "Transaction"("bookingId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Transaction_walletTransactionId_key" ON "Transaction"("walletTransactionId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Transaction_stripeTransactionId_key" ON "Transaction"("stripeTransactionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Transaction_razorpayPaymentId_key" ON "Transaction"("razorpayPaymentId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Transaction_razorpayOrderId_key" ON "Transaction"("razorpayOrderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WalletTransaction_transactionId_key" ON "WalletTransaction"("transactionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WalletTransaction_razorpayPaymentId_key" ON "WalletTransaction"("razorpayPaymentId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WalletTransaction_razorpayOrderId_key" ON "WalletTransaction"("razorpayOrderId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Host_userId_key" ON "Host"("userId");
@@ -260,7 +314,16 @@ ALTER TABLE "Booking" ADD CONSTRAINT "Booking_slotId_fkey" FOREIGN KEY ("slotId"
 ALTER TABLE "Booking" ADD CONSTRAINT "Booking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WalletTransaction" ADD CONSTRAINT "WalletTransaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WalletTransaction" ADD CONSTRAINT "WalletTransaction_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Host" ADD CONSTRAINT "Host_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
