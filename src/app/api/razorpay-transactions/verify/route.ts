@@ -4,61 +4,74 @@ import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { parse } from 'url';
 import { razorpay } from '../../../../lib/razorpay';
+import crypto from 'crypto';
 
 export async function POST(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
-      const { razorpay_payment_id } = await req.json();
+      const body = await req.json();
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+        body;
 
-      if (!razorpay_payment_id) {
+      // Validate required fields
+      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
         return NextResponse.json(
-          { message: 'Missing payment ID.' },
+          { success: false, message: 'Missing required parameters.' },
           { status: 400 }
         );
       }
 
       // Fetch payment details from Razorpay
       const payment = await razorpay.payments.fetch(razorpay_payment_id);
-      console.log(payment);
-
-      if (payment.status === 'authorized') {
-        // Capture the payment
-        const captureResponse = await razorpay.payments.capture(
-          razorpay_payment_id,
-          payment.amount,
-          payment.currency
-        );
-
-        if (captureResponse.status !== 'captured') {
-          return NextResponse.json(
-            { message: 'Payment capture failed.' },
-            { status: 400 }
-          );
-        }
-      }
-
-      // Fetch payment again to confirm it's captured
-      const verifiedPayment =
-        await razorpay.payments.fetch(razorpay_payment_id);
-
-      if (verifiedPayment.status !== 'captured') {
+      if (!payment) {
         return NextResponse.json(
-          { message: 'Payment not successful.' },
-          { status: 400 }
+          { success: false, message: 'Payment not found.' },
+          { status: 404 }
         );
       }
 
+      // Generate expected signature
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET as string)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest('hex');
+
+      // Compare signatures
+      if (expectedSignature !== razorpay_signature) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Invalid payment signature.',
+            errorCode: 'INVALID_SIGNATURE'
+          },
+          { status: 401 }
+        );
+      }
+
+      // Payment verification successful
       return NextResponse.json(
         {
           success: true,
-          message: 'Payment verified and booking confirmed.',
-          payment: verifiedPayment
+          message: 'Payment verified successfully.',
+          payment: {
+            id: payment.id,
+            status: payment.status,
+            method: payment.method,
+            amount: (Number(payment.amount) || 0) / 100, // Convert to rupees
+            currency: payment.currency
+          }
         },
         { status: 200 }
       );
     } catch (error: any) {
+      console.error('Payment Verification Error:', error);
+
       return NextResponse.json(
-        { message: 'Error verifying payment.', error: error.message },
+        {
+          success: false,
+          message: 'Internal server error. Please try again later.',
+          error: error.message
+        },
         { status: 500 }
       );
     }

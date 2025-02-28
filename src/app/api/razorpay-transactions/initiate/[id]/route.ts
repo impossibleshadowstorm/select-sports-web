@@ -4,7 +4,7 @@ import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { parse } from 'url';
 
-import { razorpay } from '../../../../lib/razorpay';
+import { razorpay } from '../../../../../lib/razorpay';
 
 export async function POST(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
@@ -12,7 +12,8 @@ export async function POST(req: AuthenticatedRequest) {
       const { id: userId } = req.user as { id: string };
       const { pathname } = parse(req.url, true);
       const slotId = pathname?.split('/').pop();
-
+      // console.log(userId);
+      // console.log(slotId);
       if (!slotId) {
         return NextResponse.json(
           { message: 'Slot ID is required in the URL.' },
@@ -25,7 +26,7 @@ export async function POST(req: AuthenticatedRequest) {
         where: { id: slotId },
         include: { team1: true, team2: true, bookings: true }
       });
-
+      // console.log(slot);
       if (!slot) {
         return NextResponse.json(
           { message: 'Slot not found.' },
@@ -64,7 +65,7 @@ export async function POST(req: AuthenticatedRequest) {
         where: { id: userId },
         select: { email: true, phone: true } //walletBalance: true,
       });
-
+      // console.log(user);
       if (!user) {
         return NextResponse.json(
           { message: 'User not found.' },
@@ -78,8 +79,9 @@ export async function POST(req: AuthenticatedRequest) {
       const order = await razorpay.orders.create({
         amount: amountToPay * 100, // Convert to paise
         currency: 'INR',
-        receipt: `receipt_${slotId}`,
-        payment_capture: true
+        receipt: `receipt_#1`,
+        payment_capture: true,
+        notes: { rec: `receipt_${slotId}` }
       });
 
       return NextResponse.json(
@@ -87,17 +89,13 @@ export async function POST(req: AuthenticatedRequest) {
           success: false,
           message:
             'Insufficient wallet balance. Please pay the remaining amount.',
-          amountToPay: amountToPay,
+          amountToPay,
           razorpayOptions: {
-            key: process.env.RAZORPAY_KEY_ID as string, // Replace with your Razorpay Key ID
-            amount: amountToPay * 100, // Convert to paise
+            order_id: order.id, // Send only the Order ID
+            amount: amountToPay * 100,
             name: 'SELECT-SPORTS',
             description: `Payment for Slot #${slotId}`,
             prefill: { contact: user.phone, email: user.email },
-            notes: {
-              walletBalance: `User wallet balance is ₹100`,
-              remainingAmount: `User has to pay ₹${amountToPay}`
-            },
             external: { wallets: ['paytm'] }
           }
         },
@@ -213,6 +211,7 @@ export async function POST(req: AuthenticatedRequest) {
       //   { status: 201 }
       // );
     } catch (error: any) {
+      // console.log(error);
       return NextResponse.json(
         { message: 'An error occurred.', error: error.message },
         { status: 500 }
