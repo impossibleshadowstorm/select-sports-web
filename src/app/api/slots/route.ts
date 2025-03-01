@@ -4,6 +4,8 @@ import { NextRequest, NextResponse as NextResponseType } from 'next/server';
 
 export async function GET(req: NextRequest): Promise<NextResponseType> {
   try {
+    const currentDateTime = new Date();
+
     const slots = await prisma.slot.findMany({
       include: {
         sport: true,
@@ -27,8 +29,25 @@ export async function GET(req: NextRequest): Promise<NextResponseType> {
           // }
         }
       },
+      where: {
+        status: {
+          in: ['AVAILABLE', 'BOOKED']
+        },
+        OR: [
+          {
+            startTime: {
+              gt: currentDateTime
+            }
+          },
+          {
+            endTime: {
+              gt: currentDateTime
+            }
+          }
+        ]
+      },
       orderBy: {
-        startTime: 'asc'
+        startTime: 'desc'
       }
     });
 

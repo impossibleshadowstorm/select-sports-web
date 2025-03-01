@@ -1,7 +1,8 @@
 import { searchParamsCache } from '@/lib/searchparams';
 import { DataTable as SlotTable } from '@/components/ui/table/data-table';
 import { columns, SlotWithBookings } from './slots-tables/columns';
-import { get } from '@/lib/api-client';
+import { authorizedGet } from '@/lib/api-client';
+import { auth } from '@/lib/auth';
 
 type SlotListingPage = {};
 
@@ -20,7 +21,8 @@ export default async function SlotListingPage({}: SlotListingPage) {
     ...(categories && { categories: categories })
   };
 
-  const response = await get('/slots/');
+  const session = await auth();
+  const response = await authorizedGet('/admin/slots/', session?.user?.id!);
   const slots: SlotWithBookings[] = response.data;
   return (
     <SlotTable<SlotWithBookings, unknown>

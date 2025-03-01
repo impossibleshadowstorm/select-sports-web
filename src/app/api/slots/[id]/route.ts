@@ -32,7 +32,12 @@ export async function GET(req: NextRequest) {
     const slot = await prisma.slot.findUnique({
       where: { id: slotId },
       include: {
-        venue: true,
+        venue: {
+          include: {
+            address: true
+          }
+        },
+        sport: true,
         bookings: true,
         team1: true,
         team2: true,

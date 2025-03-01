@@ -1,11 +1,188 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+model User {
+  id                 String              @id @default(uuid()) @db.Uuid
+  email              String              @unique
+  name               String
+  password           String
+  phone              String
+  dob                DateTime?
+  role               Role
+  gender             Gender
+  skillsRating       Int                 @default(0)
+  isVerified         Boolean             @default(false)
+  isActive           Boolean             @default(true)
+  otp                String?
+  otpExpiresAt       DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  walletBalance      Float               @default(0.0)
+  addressId          String?             @unique @db.Uuid
+  bookings           Booking[]
+  hostProfile        Host?
+  sportsProfile      SportsProfile?
+  transactions       Transaction[]
+  address            Address?            @relation(fields: [addressId], references: [id])
+  walletTransactions WalletTransaction[]
+  teams              Team[]              @relation("TeamUsers")
+}
+
+model Address {
+  id         String          @id @default(uuid()) @db.Uuid
+  street     String
+  city       String
+  state      AvailableStates
+  postalCode String
+  country    String          @default("INDIA")
+  nearby     String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  User       User?
+  Venue      Venue?
+}
+
+model SportsProfile {
+  id                String            @id @default(uuid()) @db.Uuid
+  skillLevel        SkillLevel
+  preferredPosition PreferredPosition
+  strength          String?
+  weakness          String?
+  preferredFoot     PreferredFoot
+  favoriteNumber    Int?
+  favoritePlayer    String?
+  favoriteClub      String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  userId            String            @unique @db.Uuid
+  user              User              @relation(fields: [userId], references: [id])
+}
+
+model Venue {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  images      String[]
+  description String
+  locationUrl String
+  amenities   VenueAmenities[]
+  addressId   String           @unique @db.Uuid
+  slots       Slot[]
+  address     Address          @relation(fields: [addressId], references: [id])
+  sports      Sport[]          @relation("SportToVenue")
+}
+
+model Sport {
+  id          String          @id @default(uuid()) @db.Uuid
+  name        AvailableSports @unique
+  rules       String[]
+  totalPlayer Int
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  slots       Slot[]
+  venues      Venue[]         @relation("SportToVenue")
+}
+
+model Slot {
+  id              String     @id @default(uuid()) @db.Uuid
+  startTime       DateTime
+  endTime         DateTime
+  maxPlayer       Int
+  slotType        SlotType   @default(MATCH)
+  status          SlotStatus @default(AVAILABLE)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  price           Float
+  discountedPrice Float
+  sportId         String     @db.Uuid
+  venueId         String     @db.Uuid
+  team1Id         String?    @db.Uuid
+  team2Id         String?    @db.Uuid
+  hostId          String?    @db.Uuid
+  bookings        Booking[]
+  host            Host?      @relation(fields: [hostId], references: [id])
+  sport           Sport      @relation(fields: [sportId], references: [id])
+  team1           Team?      @relation("team1Relation", fields: [team1Id], references: [id])
+  team2           Team?      @relation("team2Relation", fields: [team2Id], references: [id])
+  venue           Venue      @relation(fields: [venueId], references: [id])
+}
+
+model Booking {
+  id              String        @id @default(uuid()) @db.Uuid
+  status          BookingStatus
+  cancellationFee Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  slotId          String        @db.Uuid
+  userId          String        @db.Uuid
+  slot            Slot          @relation(fields: [slotId], references: [id])
+  user            User          @relation(fields: [userId], references: [id])
+  transaction     Transaction?
+}
+
+model Transaction {
+  id                  String             @id @default(uuid()) @db.Uuid
+  bookingId           String?            @unique @db.Uuid
+  walletTransactionId String?            @unique @db.Uuid
+  stripeTransactionId String?            @unique
+  razorpayPaymentId   String?            @unique
+  razorpayOrderId     String?            @unique
+  referenceId         String?
+  amount              Float
+  currency            String             @default("INR")
+  status              PaymentStatus
+  paymentMethod       PaymentMethod
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  userId              String?            @db.Uuid
+  booking             Booking?           @relation(fields: [bookingId], references: [id])
+  user                User?              @relation(fields: [userId], references: [id])
+  walletTransaction   WalletTransaction? @relation("WalletTransaction_Transaction")
+}
+
+model WalletTransaction {
+  id                String          @id @default(uuid()) @db.Uuid
+  userId            String          @db.Uuid
+  transactionId     String?         @unique @db.Uuid
+  razorpayPaymentId String?         @unique
+  razorpayOrderId   String?         @unique
+  razorpaySignature String?
+  amount            Float
+  currency          String          @default("INR")
+  status            PaymentStatus   @default(PENDING)
+  transactionType   TransactionType
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  transaction       Transaction?    @relation("WalletTransaction_Transaction", fields: [transactionId], references: [id])
+  user              User            @relation(fields: [userId], references: [id])
+}
+
+model Host {
+  id         String @id @default(uuid()) @db.Uuid
+  occupation String
+  userId     String @unique @db.Uuid
+  user       User   @relation(fields: [userId], references: [id])
+  slots      Slot[]
+}
+
+model Team {
+  id           String     @id @default(uuid()) @db.Uuid
+  name         String
+  color        String
+  status       TeamStatus @default(PENDING)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  slotsAsTeam1 Slot[]     @relation("team1Relation")
+  slotsAsTeam2 Slot[]     @relation("team2Relation")
+  users        User[]     @relation("TeamUsers")
 }
 
 enum Role {
@@ -23,9 +200,21 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum PaymentMethod {
+  WALLET
+  RAZORPAY
+  STRIPE
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
 enum PaymentStatus {
-  PAID
-  UNPAID
+  PENDING
+  SUCCESS
+  FAILED
 }
 
 enum SlotType {
@@ -100,165 +289,4 @@ enum TeamStatus {
   PENDING
   WIN
   LOSE
-}
-
-model User {
-  id           String    @id @default(uuid()) @db.Uuid
-  email        String    @unique
-  name         String
-  password     String
-  phone        String
-  dob          DateTime?
-  role         Role
-  gender       Gender
-  skillsRating Int       @default(0)
-  isVerified   Boolean   @default(false)
-  isActive     Boolean   @default(true)
-  otp          String?
-  otpExpiresAt DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  bookings      Booking[]
-  address       Address?       @relation(fields: [addressId], references: [id])
-  addressId     String?        @unique @db.Uuid
-  sportsProfile SportsProfile?
-  hostProfile   Host?
-  teams         Team[]         @relation(name: "TeamUsers")
-}
-
-model Address {
-  id         String          @id @default(uuid()) @db.Uuid
-  street     String
-  city       String
-  state      AvailableStates
-  postalCode String
-  country    String          @default("INDIA")
-  nearby     String?
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-  User       User?
-  Venue      Venue?
-}
-
-model SportsProfile {
-  id                String            @id @default(uuid()) @db.Uuid
-  skillLevel        SkillLevel
-  preferredPosition PreferredPosition
-  strength          String?
-  weakness          String?
-  preferredFoot     PreferredFoot
-  favoriteNumber    Int?
-  favoritePlayer    String?
-  favoriteClub      String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @unique @db.Uuid
-}
-
-model Venue {
-  id          String           @id @default(uuid()) @db.Uuid
-  name        String
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  images      String[]
-  description String
-  locationUrl String
-  amenities   VenueAmenities[]
-
-  address   Address @relation(fields: [addressId], references: [id])
-  addressId String  @unique @db.Uuid
-
-  sports Sport[]
-  slots  Slot[]
-}
-
-model Sport {
-  id          String          @id @default(uuid()) @db.Uuid
-  name        AvailableSports @unique
-  rules       String[]
-  totalPlayer Int
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  venues Venue[]
-  slots  Slot[]
-}
-
-model Slot {
-  id              String     @id @default(uuid()) @db.Uuid
-  startTime       DateTime
-  endTime         DateTime
-  maxPlayer       Int
-  slotType        SlotType   @default(MATCH)
-  status          SlotStatus @default(AVAILABLE)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  price           Float
-  discountedPrice Float
-
-  bookings Booking[]
-  sport    Sport     @relation(fields: [sportId], references: [id])
-  sportId  String    @db.Uuid
-  venue    Venue     @relation(fields: [venueId], references: [id])
-  venueId  String    @db.Uuid
-
-  team1   Team?   @relation(name: "team1Relation", fields: [team1Id], references: [id])
-  team1Id String? @db.Uuid
-
-  team2   Team?   @relation(name: "team2Relation", fields: [team2Id], references: [id])
-  team2Id String? @db.Uuid
-
-  host   Host?   @relation(fields: [hostId], references: [id])
-  hostId String? @db.Uuid
-}
-
-model Booking {
-  id              String        @id @default(uuid()) @db.Uuid
-  status          BookingStatus
-  cancellationFee Int?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  transaction     Transaction?
-  slot            Slot          @relation(fields: [slotId], references: [id])
-  slotId          String        @db.Uuid
-  user            User          @relation(fields: [userId], references: [id])
-  userId          String        @db.Uuid
-}
-
-model Transaction {
-  id                  String        @id @default(uuid()) @db.Uuid
-  booking             Booking       @relation(fields: [bookingId], references: [id])
-  bookingId           String        @unique @db.Uuid
-  stripeTransactionId String        @unique
-  referenceId         String
-  amount              Float
-  currency            String
-  status              PaymentStatus
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-}
-
-model Host {
-  id         String @id @default(uuid()) @db.Uuid
-  occupation String
-  user       User   @relation(fields: [userId], references: [id])
-  userId     String @unique @db.Uuid
-  slots      Slot[]
-}
-
-model Team {
-  id     String     @id @default(uuid()) @db.Uuid
-  name   String
-  color  String // Hex value
-  status TeamStatus @default(PENDING)
-  users  User[]     @relation(name: "TeamUsers")
-
-  slotsAsTeam1 Slot[] @relation(name: "team1Relation")
-  slotsAsTeam2 Slot[] @relation(name: "team2Relation")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

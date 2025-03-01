@@ -108,7 +108,6 @@ export default function VenueForm({
       ),
       address: { ...values.address, state: values.state }
     };
-    console.log(JSON.stringify(body));
     startTransition(async () => {
       try {
         const response: any = await authorizedPost(
@@ -116,7 +115,6 @@ export default function VenueForm({
           session?.user?.id!,
           body
         );
-
         if (response.status === 201) {
           toast.success(response.message);
           form.reset(defaultValues);
@@ -334,7 +332,7 @@ export default function VenueForm({
                     <Textarea
                       disabled={loading}
                       placeholder='Enter venue description'
-                      className='resize-none'
+                      className='max-h-[200px] min-h-[150px] resize-none'
                       {...field}
                     />
                   </FormControl>
@@ -343,7 +341,7 @@ export default function VenueForm({
               )}
             />
             <Button type='submit' disabled={loading}>
-              Add Venue
+              {initialData?.id ? 'Update Venue' : 'Add Venue'}
             </Button>
           </form>
         </Form>

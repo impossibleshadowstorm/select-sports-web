@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { authorizedPost } from '@/lib/api-client';
+import { authorizedPost, authorizedPatch } from '@/lib/api-client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SlotStatus, SlotType, Sport, Venue } from '@prisma/client';
 import { useSession } from 'next-auth/react';
@@ -47,7 +47,9 @@ const formSchema = z.object({
   team1Color: z.string().min(7, 'Team2 Color is required.'),
   team2Name: z.string().min(5, 'Team2 Name must be od minimum 5 Characters.'),
   team2Color: z.string().min(7, 'Team2 Color is required.'),
-  hostId: z.string().optional()
+  hostId: z.string().optional(),
+  price: z.number().nonnegative(),
+  discountedPrice: z.number().nonnegative()
 });
 
 export default function SlotForm({
@@ -65,8 +67,12 @@ export default function SlotForm({
   const router = useRouter();
   const [loading, startTransition] = useTransition();
   const defaultValues = {
-    startTime: initialData?.startTime ? initialData?.startTime : '',
-    endTime: initialData?.endTime ? initialData?.endTime?.toString() : '',
+    startTime: initialData?.startTime
+      ? format(new Date(initialData.startTime), "yyyy-MM-dd'T'HH:mm")
+      : '',
+    endTime: initialData?.endTime
+      ? format(new Date(initialData.endTime), "yyyy-MM-dd'T'HH:mm")
+      : '',
     maxPlayer: initialData?.maxPlayer || 1,
     slotType: SlotType.MATCH,
     status: SlotStatus.AVAILABLE,
@@ -76,7 +82,9 @@ export default function SlotForm({
     team1Color: initialData?.team1?.color || '',
     team2Name: initialData?.team2?.name || '',
     team2Color: initialData?.team2?.color || '',
-    hostId: ''
+    hostId: '',
+    price: initialData?.price || 100,
+    discountedPrice: initialData?.discountedPrice || 99
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -102,13 +110,20 @@ export default function SlotForm({
           team1: { name: values.team1Name, color: values.team1Color },
           team2: { name: values.team2Name, color: values.team2Color }
         };
-        const response = await authorizedPost(
-          '/admin/slots/',
-          session?.user?.id!,
-          formattedValues
-        );
 
-        if (response.status === 201) {
+        const response = (await (initialData?.id
+          ? authorizedPatch(
+              `/admin/slots/${initialData.id}`,
+              session?.user?.id!,
+              formattedValues
+            )
+          : authorizedPost(
+              '/admin/slots/',
+              session?.user?.id!,
+              formattedValues
+            ))) as { status: number; message: string };
+
+        if (response.status === 201 || response.status === 200) {
           toast.success(response.message);
           form.reset();
           router.push('/dashboard/slots');
@@ -334,9 +349,52 @@ export default function SlotForm({
                   )}
                 />
               </div>
+              <div className='space-y-4 rounded-lg border p-4'>
+                <h3 className='text-center text-lg font-semibold'>Pricing</h3>
+                <FormField
+                  control={form.control}
+                  name='price'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Price</FormLabel>
+                      <FormControl>
+                        <Input
+                          type='number'
+                          disabled={loading}
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 0)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='discountedPrice'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discounted Price</FormLabel>
+                      <FormControl>
+                        <Input
+                          type='number'
+                          disabled={loading}
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 0)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
             <Button type='submit' disabled={loading}>
-              Add Slot
+              {initialData?.id ? 'Update Slot' : 'Add Slot'}
             </Button>
           </form>
         </Form>

@@ -13,6 +13,8 @@ import { Edit, MoreHorizontal, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { authorizedDelete } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 interface CellActionProps {
   data: Venue;
@@ -28,23 +30,12 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const onConfirm = async () => {
     try {
       setLoading(true);
-
-      const response = await fetch(`/api/admin/venues/${data.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${session?.user?.id}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete venue');
-      }
-
+      await authorizedDelete(`/admin/venues/${data.id}`, session?.user?.id!);
       setOpen(false); // Close the modal
+      toast.success('Venues deleted successfully..!');
       router.refresh(); // Refresh the page to update the list
     } catch (error) {
-      console.error('Error deleting venue:', error);
-      alert('Failed to delete venue. Please try again.');
+      toast.error('Failed to delete venue. Please try again.');
     } finally {
       setLoading(false);
     }

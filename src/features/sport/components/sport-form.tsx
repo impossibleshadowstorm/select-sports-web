@@ -19,7 +19,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { authorizedPost } from '@/lib/api-client';
+import { authorizedPost, authorizedPatch } from '@/lib/api-client';
 import { FirstLetterCaps } from '@/lib/utils/string-utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AvailableSports, Sport } from '@prisma/client';
@@ -86,13 +86,22 @@ export default function SportForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
       try {
-        const response: any = await authorizedPost(
-          '/admin/sports/',
-          session?.user?.id!,
-          values
-        );
+        const response = (await (initialData?.id
+          ? authorizedPatch(
+              `/admin/sports/${initialData.id}`,
+              session?.user?.id!,
+              values
+            )
+          : authorizedPost(`/admin/sports/`, session?.user?.id!, values))) as {
+          status: number;
+          message: string;
+        };
 
         if (response.status === 201) {
+          toast.success(response.message);
+          form.reset(defaultValues);
+          router.push('/dashboard/sports');
+        } else if (response.status === 200) {
           toast.success(response.message);
           form.reset(defaultValues);
           router.push('/dashboard/sports');
@@ -237,7 +246,7 @@ export default function SportForm({
               <FormMessage />
             </FormItem> */}
             <Button type='submit' disabled={loading}>
-              Add Product
+              {initialData?.id ? 'Update Sport' : 'Add Sport'}
             </Button>
           </form>
         </Form>
