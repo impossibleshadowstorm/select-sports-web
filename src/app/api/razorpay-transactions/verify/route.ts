@@ -1,9 +1,7 @@
-import prisma from '@/lib/utils/prisma-client';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
-import { parse } from 'url';
-import { razorpay } from '../../../../lib/razorpay';
+import { razorpay } from '@/lib/razorpay';
 import crypto from 'crypto';
 
 export async function POST(req: AuthenticatedRequest) {
@@ -64,8 +62,6 @@ export async function POST(req: AuthenticatedRequest) {
         { status: 200 }
       );
     } catch (error: any) {
-      console.error('Payment Verification Error:', error);
-
       return NextResponse.json(
         {
           success: false,

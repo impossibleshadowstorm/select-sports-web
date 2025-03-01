@@ -1,5 +1,5 @@
 import prisma from '@/lib/utils/prisma-client';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { parse } from 'url';
@@ -72,11 +72,11 @@ export async function POST(req: AuthenticatedRequest) {
         );
       }
 
-      const slotPrice = slot.price;
+      const slotPrice = slot.price; // eslint-disable-line
       let amountToPay = 100;
 
-      const order = await razorpay.orders.create({
-        amount: amountToPay * 100, // Convert to paise
+      await razorpay.orders.create({
+        amount: amountToPay * 100,
         currency: 'INR',
         receipt: `receipt_${slotId}`,
         payment_capture: true

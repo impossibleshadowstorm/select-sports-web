@@ -280,7 +280,6 @@ export async function PATCH(req: AuthenticatedRequest) {
         user: updatedUser
       });
     } catch (error) {
-      console.error('Error updating user:', error);
       return NextResponse.json(
         {
           message: 'Failed to update user.',

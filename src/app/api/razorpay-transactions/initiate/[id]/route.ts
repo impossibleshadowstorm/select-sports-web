@@ -1,10 +1,9 @@
 import prisma from '@/lib/utils/prisma-client';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { parse } from 'url';
-
-import { razorpay } from '../../../../../lib/razorpay';
+import { razorpay } from '@/lib/razorpay';
 
 export async function POST(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
@@ -12,8 +11,6 @@ export async function POST(req: AuthenticatedRequest) {
       const { id: userId } = req.user as { id: string };
       const { pathname } = parse(req.url, true);
       const slotId = pathname?.split('/').pop();
-      // console.log(userId);
-      // console.log(slotId);
       if (!slotId) {
         return NextResponse.json(
           { message: 'Slot ID is required in the URL.' },
@@ -26,7 +23,6 @@ export async function POST(req: AuthenticatedRequest) {
         where: { id: slotId },
         include: { team1: true, team2: true, bookings: true }
       });
-      // console.log(slot);
       if (!slot) {
         return NextResponse.json(
           { message: 'Slot not found.' },
@@ -73,11 +69,11 @@ export async function POST(req: AuthenticatedRequest) {
         );
       }
 
-      const slotPrice = slot.price;
+      const slotPrice = slot.price; // eslint-disable-line
       let amountToPay = 100;
 
       const order = await razorpay.orders.create({
-        amount: amountToPay * 100, // Convert to paise
+        amount: amountToPay * 100,
         currency: 'INR',
         receipt: `receipt_#1`,
         payment_capture: true,

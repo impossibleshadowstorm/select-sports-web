@@ -1,6 +1,5 @@
 'use client';
-
-import { CrossIcon, UploadIcon } from 'lucide-react';
+import { CrossIcon } from 'lucide-react';
 import Image from 'next/image';
 import * as React from 'react';
 import Dropzone, {
@@ -8,7 +7,6 @@ import Dropzone, {
   type FileRejection
 } from 'react-dropzone';
 import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -99,7 +97,6 @@ export function FileUploader(props: FileUploaderProps) {
     value: valueProp,
     onValueChange,
     onUpload,
-    progresses,
     accept = { 'image/*': [] },
     maxSize = 1024 * 1024 * 2,
     maxFiles = 1,
@@ -138,7 +135,6 @@ export function FileUploader(props: FileUploaderProps) {
             setUploadProgress((prev) => ({ ...prev, [file.name]: 100 })); // Mark as complete
             return fileUrl;
           } catch (error) {
-            console.error('Upload failed for', file.name, error);
             toast.error(`Upload failed: ${file.name}`);
             return null; // Mark failure
           }
@@ -154,11 +150,11 @@ export function FileUploader(props: FileUploaderProps) {
         if (successfulUploads.length === filesToUpload.length) {
           await onUpload(successfulUploads); // Send all uploaded URLs
         } else {
-          console.error('Some files failed to upload.');
+          toast.error('Some files failed to upload.');
         }
       }
-    } catch (error) {
-      console.error('Error uploading files:', error);
+    } catch (error: any) {
+      toast.error('Error uploading files:', error);
     }
   };
 
@@ -213,7 +209,7 @@ export function FileUploader(props: FileUploaderProps) {
         }
       });
     };
-  }, []);
+  }, []); // eslint-disable-line
 
   const isDisabled = disabled || (files?.length ?? 0) >= maxFiles;
 

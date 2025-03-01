@@ -30,15 +30,12 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const onConfirm = async () => {
     try {
       setLoading(true);
-      const response = await authorizedDelete(
-        `/admin/venues/${data.id}`,
-        session?.user?.id!
-      );
+      await authorizedDelete(`/admin/venues/${data.id}`, session?.user?.id!);
       setOpen(false); // Close the modal
+      toast.success('Venues deleted successfully..!');
       router.refresh(); // Refresh the page to update the list
     } catch (error) {
-      console.error('Error deleting venue:', error);
-      alert('Failed to delete venue. Please try again.');
+      toast.error('Failed to delete venue. Please try again.');
     } finally {
       setLoading(false);
     }
