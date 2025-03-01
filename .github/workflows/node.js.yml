@@ -35,6 +35,8 @@ jobs:
           echo "AUTH_TRUST_HOST=${{ vars.AUTH_TRUST_HOST }}" >> .env
           echo "NEXTAUTH_SECRET=${{ vars.NEXTAUTH_SECRET }}" >> .env
           echo "NEXT_PUBLIC_SITE_BACKEND_HOST=${{ vars.NEXT_PUBLIC_SITE_BACKEND_HOST }}" >> .env
+          echo "RAZORPAY_KEY_ID=${{ vars.RAZORPAY_KEY_ID }}" >> .env
+          echo "RAZORPAY_KEY_SECRET=${{ vars.RAZORPAY_KEY_SECRET }}" >> .env
 
       # - name: 🏗 Build Next.js App
       #   run: yarn build
