@@ -39,13 +39,7 @@ export async function POST(req: NextRequest | NextRequest) {
     }
 
     try {
-      const existingSport = await prisma.sport.findMany({});
-      if (existingSport) {
-        return NextResponse.json(
-          { message: 'Sport name already exists' },
-          { status: 400 }
-        );
-      }
+      // TODO: Add check for existing game
       const sport = await prisma.sport.create({
         data: {
           name,

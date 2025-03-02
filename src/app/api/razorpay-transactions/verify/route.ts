@@ -3,13 +3,19 @@ import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { razorpay } from '@/lib/razorpay';
 import crypto from 'crypto';
+import { bookSlot } from '@/lib/utils/book-slot';
 
 export async function POST(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
       const body = await req.json();
-      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-        body;
+      const { id: userId } = req.user as { id: string };
+      const {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        slotId
+      } = body;
 
       // Validate required fields
       if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -45,6 +51,10 @@ export async function POST(req: AuthenticatedRequest) {
           { status: 401 }
         );
       }
+
+      const bookData = await bookSlot(userId, slotId);
+
+      console.log(bookData);
 
       // Payment verification successful
       return NextResponse.json(
