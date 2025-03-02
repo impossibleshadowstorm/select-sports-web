@@ -4,16 +4,19 @@ import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { parse } from 'url';
 import { razorpay } from '@/lib/razorpay';
+import { bookSlot } from '@/lib/utils/book-slot';
 
 export async function POST(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
+      const body = await req.json();
+      const { useWallet } = body;
       const { id: userId } = req.user as { id: string };
       const { pathname } = parse(req.url, true);
       const slotId = pathname?.split('/').pop();
       if (!slotId) {
         return NextResponse.json(
-          { message: 'Slot ID is required in the URL.' },
+          { success: false, message: 'Slot ID is required in the URL.' },
           { status: 400 }
         );
       }
@@ -23,9 +26,10 @@ export async function POST(req: AuthenticatedRequest) {
         where: { id: slotId },
         include: { team1: true, team2: true, bookings: true }
       });
+
       if (!slot) {
         return NextResponse.json(
-          { message: 'Slot not found.' },
+          { success: false, message: 'Slot not found.' },
           { status: 404 }
         );
       }
@@ -37,6 +41,7 @@ export async function POST(req: AuthenticatedRequest) {
       if (timeDiffHours < 3) {
         return NextResponse.json(
           {
+            success: false,
             message:
               'Booking must be made at least 3 hours before the slot starts.'
           },
@@ -51,7 +56,7 @@ export async function POST(req: AuthenticatedRequest) {
 
       if (existingBooking) {
         return NextResponse.json(
-          { message: 'You have already booked this slot.' },
+          { success: false, message: 'You have already booked this slot.' },
           { status: 400 }
         );
       }
@@ -59,157 +64,130 @@ export async function POST(req: AuthenticatedRequest) {
       // Fetch user wallet balance
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { email: true, phone: true } //walletBalance: true,
+        select: {
+          email: true,
+          phone: true,
+          wallet: { select: { balance: true, id: true } } // Fetch balance from Wallet table
+        }
       });
-      // console.log(user);
+
       if (!user) {
         return NextResponse.json(
-          { message: 'User not found.' },
+          { success: false, message: 'User not found.' },
           { status: 404 }
         );
       }
 
-      const slotPrice = slot.price; // eslint-disable-line
-      let amountToPay = 100;
+      const slotPrice = slot.discountedPrice;
+      const walletBalance = user.wallet?.balance ?? 0;
+      let amountToPay = slotPrice;
 
-      const order = await razorpay.orders.create({
-        amount: amountToPay * 100,
+      if (useWallet) {
+        if (walletBalance >= slotPrice) {
+          // Sufficient wallet balance, book slot directly
+          const wallet = await prisma.wallet.findUnique({
+            where: { userId: userId },
+            select: { balance: true }
+          });
+
+          if (!wallet || wallet.balance < slotPrice) {
+            throw new Error('Insufficient balance');
+          }
+
+          await prisma.wallet.update({
+            where: { userId: userId },
+            data: { balance: { decrement: slotPrice } }
+          });
+
+          await prisma.$transaction(async (prisma) => {
+            // Insert transaction
+            const transaction = await prisma.transaction.create({
+              data: {
+                userId: userId,
+                method: 'WALLET',
+                amount: slotPrice,
+                status: 'SUCCESS',
+                currency: 'INR'
+              }
+            });
+
+            // Insert wallet transaction
+            const walletTransaction = await prisma.walletTransaction.create({
+              data: {
+                transactionId: transaction.id,
+                walletId: user.wallet!.id, // Replace with actual wallet ID
+                transactionType: 'DEBIT' // Adjust based on transaction type
+              }
+            });
+
+            return { transaction, walletTransaction };
+          });
+          const bookingResponse = await bookSlot(userId, slotId);
+          return NextResponse.json(bookingResponse, {
+            status: bookingResponse.status
+          });
+        } else {
+          // Insufficient wallet balance, calculate remaining balance
+          amountToPay = slotPrice - walletBalance;
+        }
+      }
+
+      // Generate Razorpay order for the remaining balance (or full amount if useWallet is false)
+      const razorpayOrder = await razorpay.orders.create({
+        amount: amountToPay * 100, // Convert to paise
         currency: 'INR',
-        receipt: `receipt_#1`,
-        payment_capture: true,
-        notes: { rec: `receipt_${slotId}` }
+        receipt: `receipt_#123}`,
+        payment_capture: true
       });
 
+      if (useWallet) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Insufficient wallet balance. Please pay the remaining amount ${amountToPay}.`,
+            amountToPay: amountToPay,
+            razorpayOptions: {
+              key: process.env.RAZORPAY_KEY_ID as string,
+              order_id: razorpayOrder.id,
+              amount: amountToPay * 100,
+              name: 'SELECT-SPORTS',
+              description: `Payment for Slot #${slotId}`,
+              prefill: { contact: user.phone, email: user.email },
+              notes: {
+                walletBalance: `User wallet balance is ₹${walletBalance}`,
+                remainingAmount: `User has to pay ₹${amountToPay}`
+              },
+              external: { wallets: ['paytm'] }
+            }
+          },
+          { status: 402 }
+        );
+      }
       return NextResponse.json(
         {
           success: false,
-          message:
-            'Insufficient wallet balance. Please pay the remaining amount.',
-          amountToPay,
+          useWallet: useWallet,
+          message: `Please pay the ${amountToPay} amount. To book slot`,
+          amountToPay: amountToPay,
           razorpayOptions: {
-            order_id: order.id, // Send only the Order ID
+            key: process.env.RAZORPAY_KEY_ID as string,
+            order_id: razorpayOrder.id,
             amount: amountToPay * 100,
             name: 'SELECT-SPORTS',
             description: `Payment for Slot #${slotId}`,
             prefill: { contact: user.phone, email: user.email },
+            notes: {
+              walletBalance: `User wallet balance is ₹${walletBalance}`,
+              remainingAmount: `User has to pay ₹${amountToPay}`
+            },
             external: { wallets: ['paytm'] }
           }
         },
-        { status: 402 } // Payment Required
+        { status: 402 }
       );
-
-      // if (user.walletBalance < slotPrice) {
-      //   amountToPay = slotPrice - user.walletBalance;
-
-      //   // Send response to initiate Razorpay payment
-      //   return NextResponse.json(
-      //     {
-      //       success: false,
-      //       message:
-      //         'Insufficient wallet balance. Please pay the remaining amount.',
-      //       amountToPay: amountToPay,
-      //       razorpayOptions: {
-      //         key: 'rzp_test_XKekcIS5FdsrRF', // Replace with your Razorpay Key ID
-      //         amount: amountToPay * 100, // Convert to paise
-      //         name: 'SELECT-SPORTS',
-      //         description: `Payment for Slot #${slotId}`,
-      //         prefill: { contact: user.phone, email: user.email },
-      //         notes: {
-      //           walletBalance: `User wallet balance is ₹${user.walletBalance}`,
-      //           remainingAmount: `User has to pay ₹${amountToPay}`
-      //         },
-      //         external: { wallets: ['paytm'] }
-      //       }
-      //     },
-      //     { status: 402 } // Payment Required
-      //   );
-      // }
-
-      // // Deduct slot price from wallet
-      // await prisma.user.update({
-      //   where: { id: userId },
-      //   data: { walletBalance: { decrement: slotPrice } }
-      // });
-
-      // // Fetch team sizes
-      // const team1Count = slot.team1Id
-      //   ? await prisma.team.findUnique({
-      //       where: { id: slot.team1Id },
-      //       select: { _count: { select: { users: true } } }
-      //     })
-      //   : { _count: { users: 0 } };
-
-      // const team2Count = slot.team2Id
-      //   ? await prisma.team.findUnique({
-      //       where: { id: slot.team2Id },
-      //       select: { _count: { select: { users: true } } }
-      //     })
-      //   : { _count: { users: 0 } };
-
-      // const totalPlayers =
-      //   (team1Count?._count.users || 0) + (team2Count?._count.users || 0);
-
-      // // Check if slot is full
-      // if (totalPlayers >= slot.maxPlayer) {
-      //   return NextResponse.json(
-      //     {
-      //       success: false,
-      //       message:
-      //         'Slot is full. Your pay amount will be refunded in App Wallet in 2-3 working days.',
-      //       bookingStatus: 'CANCELLED'
-      //     },
-      //     { status: 400 }
-      //   );
-      // }
-
-      // // Round-robin logic for team assignment
-      // let assignedTeamId = null;
-      // if (!slot.team1Id) {
-      //   assignedTeamId = slot.team1?.id;
-      // } else if (!slot.team2Id) {
-      //   assignedTeamId = slot.team2?.id;
-      // } else if (
-      //   (team1Count?._count.users || 0) < (team2Count?._count.users || 0)
-      // ) {
-      //   assignedTeamId = slot.team1Id;
-      // } else {
-      //   assignedTeamId = slot.team2Id;
-      // }
-
-      // // Create new booking
-      // const booking = await prisma.booking.create({
-      //   data: {
-      //     status: 'CONFIRMED',
-      //     slotId,
-      //     userId
-      //   }
-      // });
-
-      // // Assign user to the chosen team
-      // await prisma.user.update({
-      //   where: { id: userId },
-      //   data: { teams: { connect: { id: assignedTeamId } } }
-      // });
-
-      // // Update user's bookings
-      // await prisma.user.update({
-      //   where: { id: userId },
-      //   data: { bookings: { connect: { id: booking.id } } }
-      // });
-
-      // return NextResponse.json(
-      //   {
-      //     success: true,
-      //     message: 'Booking successful',
-      //     bookingId: booking.id,
-      //     assignedTeam: assignedTeamId === slot.team1Id ? 'team1' : 'team2'
-      //   },
-      //   { status: 201 }
-      // );
     } catch (error: any) {
-      // console.log(error);
       return NextResponse.json(
-        { message: 'An error occurred.', error: error.message },
+        { success: false, message: 'An error occurred.', error: error.message },
         { status: 500 }
       );
     }
