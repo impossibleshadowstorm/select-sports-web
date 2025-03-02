@@ -14,7 +14,7 @@ CREATE TYPE "PaymentMethod" AS ENUM ('WALLET', 'RAZORPAY', 'STRIPE');
 CREATE TYPE "TransactionType" AS ENUM ('CREDIT', 'DEBIT');
 
 -- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'REFUND_PROCESSING', 'REFUND_SUCCESSFUL');
 
 -- CreateEnum
 CREATE TYPE "SlotType" AS ENUM ('PRACTICE', 'MATCH', 'TRAINING');
@@ -60,7 +60,6 @@ CREATE TABLE "User" (
     "otpExpiresAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "walletBalance" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
     "addressId" UUID,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -156,6 +155,7 @@ CREATE TABLE "Booking" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "slotId" UUID NOT NULL,
     "userId" UUID NOT NULL,
+    "transactionId" UUID,
 
     CONSTRAINT "Booking_pkey" PRIMARY KEY ("id")
 );
@@ -163,39 +163,51 @@ CREATE TABLE "Booking" (
 -- CreateTable
 CREATE TABLE "Transaction" (
     "id" UUID NOT NULL,
-    "bookingId" UUID,
-    "walletTransactionId" UUID,
-    "stripeTransactionId" TEXT,
-    "razorpayPaymentId" TEXT,
-    "razorpayOrderId" TEXT,
-    "referenceId" TEXT,
+    "userId" UUID NOT NULL,
+    "method" "PaymentMethod" NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'INR',
     "status" "PaymentStatus" NOT NULL,
-    "paymentMethod" "PaymentMethod" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "userId" UUID,
 
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
+CREATE TABLE "RazorpayTransaction" (
+    "id" UUID NOT NULL,
+    "transactionId" UUID NOT NULL,
+    "razorpayOrderId" TEXT,
+    "razorpayPaymentId" TEXT,
+    "razorpaySignature" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "RazorpayTransaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "WalletTransaction" (
     "id" UUID NOT NULL,
-    "userId" UUID NOT NULL,
-    "transactionId" UUID,
-    "razorpayPaymentId" TEXT,
-    "razorpayOrderId" TEXT,
-    "razorpaySignature" TEXT,
-    "amount" DOUBLE PRECISION NOT NULL,
-    "currency" TEXT NOT NULL DEFAULT 'INR',
-    "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
+    "transactionId" UUID NOT NULL,
+    "walletId" UUID NOT NULL,
     "transactionType" "TransactionType" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "WalletTransaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Wallet" (
+    "id" UUID NOT NULL,
+    "userId" UUID NOT NULL,
+    "balance" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Wallet_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -251,28 +263,19 @@ CREATE UNIQUE INDEX "Venue_addressId_key" ON "Venue"("addressId");
 CREATE UNIQUE INDEX "Sport_name_key" ON "Sport"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Transaction_bookingId_key" ON "Transaction"("bookingId");
+CREATE UNIQUE INDEX "RazorpayTransaction_transactionId_key" ON "RazorpayTransaction"("transactionId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Transaction_walletTransactionId_key" ON "Transaction"("walletTransactionId");
+CREATE UNIQUE INDEX "RazorpayTransaction_razorpayOrderId_key" ON "RazorpayTransaction"("razorpayOrderId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Transaction_stripeTransactionId_key" ON "Transaction"("stripeTransactionId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Transaction_razorpayPaymentId_key" ON "Transaction"("razorpayPaymentId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Transaction_razorpayOrderId_key" ON "Transaction"("razorpayOrderId");
+CREATE UNIQUE INDEX "RazorpayTransaction_razorpayPaymentId_key" ON "RazorpayTransaction"("razorpayPaymentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "WalletTransaction_transactionId_key" ON "WalletTransaction"("transactionId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "WalletTransaction_razorpayPaymentId_key" ON "WalletTransaction"("razorpayPaymentId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "WalletTransaction_razorpayOrderId_key" ON "WalletTransaction"("razorpayOrderId");
+CREATE UNIQUE INDEX "Wallet_userId_key" ON "Wallet"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Host_userId_key" ON "Host"("userId");
@@ -293,10 +296,10 @@ ALTER TABLE "SportsProfile" ADD CONSTRAINT "SportsProfile_userId_fkey" FOREIGN K
 ALTER TABLE "Venue" ADD CONSTRAINT "Venue_addressId_fkey" FOREIGN KEY ("addressId") REFERENCES "Address"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Slot" ADD CONSTRAINT "Slot_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Slot" ADD CONSTRAINT "Slot_hostId_fkey" FOREIGN KEY ("hostId") REFERENCES "Host"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Slot" ADD CONSTRAINT "Slot_venueId_fkey" FOREIGN KEY ("venueId") REFERENCES "Venue"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Slot" ADD CONSTRAINT "Slot_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Slot" ADD CONSTRAINT "Slot_team1Id_fkey" FOREIGN KEY ("team1Id") REFERENCES "Team"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -305,7 +308,7 @@ ALTER TABLE "Slot" ADD CONSTRAINT "Slot_team1Id_fkey" FOREIGN KEY ("team1Id") RE
 ALTER TABLE "Slot" ADD CONSTRAINT "Slot_team2Id_fkey" FOREIGN KEY ("team2Id") REFERENCES "Team"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Slot" ADD CONSTRAINT "Slot_hostId_fkey" FOREIGN KEY ("hostId") REFERENCES "Host"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Slot" ADD CONSTRAINT "Slot_venueId_fkey" FOREIGN KEY ("venueId") REFERENCES "Venue"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Booking" ADD CONSTRAINT "Booking_slotId_fkey" FOREIGN KEY ("slotId") REFERENCES "Slot"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -314,16 +317,22 @@ ALTER TABLE "Booking" ADD CONSTRAINT "Booking_slotId_fkey" FOREIGN KEY ("slotId"
 ALTER TABLE "Booking" ADD CONSTRAINT "Booking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WalletTransaction" ADD CONSTRAINT "WalletTransaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "RazorpayTransaction" ADD CONSTRAINT "RazorpayTransaction_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WalletTransaction" ADD CONSTRAINT "WalletTransaction_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "WalletTransaction" ADD CONSTRAINT "WalletTransaction_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WalletTransaction" ADD CONSTRAINT "WalletTransaction_walletId_fkey" FOREIGN KEY ("walletId") REFERENCES "Wallet"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Wallet" ADD CONSTRAINT "Wallet_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Host" ADD CONSTRAINT "Host_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

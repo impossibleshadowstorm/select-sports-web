@@ -107,7 +107,10 @@ export const register = async (
         password: hashedPassword,
         dob: parsedDob,
         gender,
-        role: body?.role ?? role
+        role: body?.role ?? role,
+        wallet: {
+          create: {}
+        }
       }
     });
 
