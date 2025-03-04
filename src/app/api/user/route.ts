@@ -46,7 +46,6 @@ export async function GET(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
       const { id } = req.user as { id: string }; // Explicitly type `req.user`
-
       // Fetch user data from the database
       const user = await prisma.user.findUnique({
         where: { id },

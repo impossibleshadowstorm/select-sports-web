@@ -239,7 +239,6 @@ export async function authorizedPatch<T>(
   Object.keys(params).forEach((key) =>
     url.searchParams.append(key, params[key])
   );
-
   const response = await fetch(url.toString(), {
     method: 'PATCH',
     headers: buildHeaders(
