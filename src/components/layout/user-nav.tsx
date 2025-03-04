@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { signOut, useSession } from 'next-auth/react';
+import Link from 'next/link';
 export function UserNav() {
   const { data: session } = useSession();
   if (session) {
@@ -41,10 +42,19 @@ export function UserNav() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem>
-              Profile
-              <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-            </DropdownMenuItem>
+            <Link href='/dashboard/profile' passHref>
+              <DropdownMenuItem>
+                <span>Profile</span>
+                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </Link>
+            <Link href='/dashboard/security' passHref>
+              <DropdownMenuItem>
+                <span>Security</span>
+                <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </Link>
+
             <DropdownMenuItem>
               Billing
               <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
