@@ -20,7 +20,7 @@ import {
   authorizedPost,
   CommonResponseType
 } from '@/lib/api-client';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 const changePasswordSchema = z
   .object({
@@ -81,9 +81,13 @@ export default function ChangePasswordForm() {
       );
 
       if (response.status === 200) {
-        toast.success('Password updated successfully');
+        toast.success('Password updated successfully. Logging out...');
         form.reset();
         setIsCurrentPasswordValid(false);
+
+        setTimeout(() => {
+          signOut();
+        }, 2000);
       } else {
         toast.error(response.message || 'Failed to update password');
       }
