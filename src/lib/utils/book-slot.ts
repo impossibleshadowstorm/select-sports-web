@@ -1,8 +1,4 @@
 import prisma from '@/lib/utils/prisma-client';
-import { NextRequest, NextResponse } from 'next/server';
-import { authenticate } from '@/middlewares/auth';
-import { AuthenticatedRequest } from '@/lib/utils/request-type';
-import { parse } from 'url';
 
 export async function bookSlot(userId: string, slotId: string) {
   try {
@@ -126,7 +122,6 @@ export async function bookSlot(userId: string, slotId: string) {
       status: 201
     };
   } catch (error: any) {
-    console.log(error);
     return {
       success: false,
       message: 'An error occurred.',

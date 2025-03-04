@@ -17,16 +17,13 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { profileSchema, type ProfileFormValues } from '../utils/form-schema';
-import { cn } from '@/lib/utils';
+import { profileSchema } from '../utils/form-schema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertTriangleIcon, Trash, Trash2Icon } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
+import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { authorizedPatch, authorizedPost } from '@/lib/api-client';
+import { authorizedPatch } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import * as z from 'zod';
@@ -957,8 +954,6 @@ export default function ProfileCreatePage({
   });
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
-    console.log('Submitting form:', values);
-
     startTransition(async () => {
       try {
         const updatedValues = {
@@ -969,7 +964,7 @@ export default function ProfileCreatePage({
           postalCode: values.address.postalCode
         };
 
-        const response = await authorizedPatch(
+        const response: any = await authorizedPatch(
           `/user/${initialData?.id}`,
           session?.user?.id!,
           updatedValues

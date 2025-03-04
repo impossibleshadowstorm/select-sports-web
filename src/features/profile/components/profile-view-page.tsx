@@ -4,16 +4,9 @@ import { authorizedGet } from '@/lib/api-client';
 import { auth } from '@/lib/auth';
 import { AvailableStates } from '@prisma/client'; // Import Prisma Enum
 
-type TUserProfileViewPageProps = {
-  userId: string;
-};
-
-export default async function ProfileViewPage({
-  userId
-}: TUserProfileViewPageProps) {
+export default async function ProfileViewPage() {
   const session = await auth();
   let { data: user } = await authorizedGet(`/user`, session?.user?.id!);
-  console.log(user);
 
   const availableStates = Object.values(AvailableStates);
 
