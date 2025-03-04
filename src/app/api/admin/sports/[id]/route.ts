@@ -12,7 +12,6 @@ interface SportRequestBody {
 
 export async function PATCH(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
-    // const { id } = await params;
     const id = req.nextUrl.pathname.split('/').pop();
     const { name, rules, totalPlayer }: SportRequestBody = await req.json();
 
@@ -44,6 +43,31 @@ export async function PATCH(req: NextRequest) {
     } catch (error: any) {
       return NextResponse.json(
         { message: 'Failed to update sport details.', error: error },
+        { status: 500 }
+      );
+    }
+  });
+}
+
+export async function DELETE(req: NextRequest) {
+  return await authenticateAdmin(req, async () => {
+    try {
+      const id = req.nextUrl.pathname.split('/').pop();
+
+      // Ensure ID is provided
+      if (!id) {
+        return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+      }
+
+      // Delete the sport entry
+      await prisma.sport.delete({
+        where: { id }
+      });
+
+      return NextResponse.json({ success: true, message: 'Sport deleted' });
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Failed to delete sport' },
         { status: 500 }
       );
     }
