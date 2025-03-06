@@ -49,3 +49,30 @@ export async function PATCH(req: NextRequest) {
     }
   });
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params;
+
+    // Ensure ID is provided
+    if (!id) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    }
+
+    // Delete the sport entry
+    await prisma.sport.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true, message: 'Sport deleted' });
+  } catch (error) {
+    console.error('Error deleting sport:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete sport' },
+      { status: 500 }
+    );
+  }
+}

@@ -46,6 +46,8 @@ import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { Icons } from '../icons';
 import Image from 'next/image';
+import { authorizedGet } from '@/lib/api-client';
+import { useEffect, useState } from 'react';
 
 export const company = {
   name: 'Select Sports',
@@ -58,6 +60,29 @@ export default function AppSidebar() {
   const pathname = usePathname();
   // eslint-disable-next-line
   const { state, isMobile } = useSidebar();
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await authorizedGet('/user', session?.user?.id!);
+        const name = await res.data.name;
+        setUserName(name || 'Guest User');
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchUser();
+  }, []);
+  const getInitials = (name: string) => {
+    const words = name.trim().split(' ');
+    const initials = words
+      .filter((n) => n.length > 0) // Remove empty strings
+      .map((n) => n[0].toUpperCase()) // Take first letter
+      .slice(0, 2) // Get first two letters
+      .join('');
+    return initials;
+  };
 
   return (
     <Sidebar collapsible='icon'>
@@ -157,7 +182,7 @@ export default function AppSidebar() {
                       alt={session?.user?.name || ''}
                     />
                     <AvatarFallback className='rounded-lg'>
-                      {session?.user?.name?.slice(0, 2)?.toUpperCase() || 'CN'}
+                      {getInitials(userName)}
                     </AvatarFallback>
                   </Avatar>
                   <div className='grid flex-1 text-left text-sm leading-tight'>
@@ -185,8 +210,7 @@ export default function AppSidebar() {
                         alt={session?.user?.name || ''}
                       />
                       <AvatarFallback className='rounded-lg'>
-                        {session?.user?.name?.slice(0, 2)?.toUpperCase() ||
-                          'CN'}
+                        {getInitials(userName)}
                       </AvatarFallback>
                     </Avatar>
                     <div className='grid flex-1 text-left text-sm leading-tight'>
@@ -202,7 +226,7 @@ export default function AppSidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
-                <DropdownMenuGroup>
+                {/* <DropdownMenuGroup>
                   <DropdownMenuItem>
                     <BadgeCheck />
                     Account
@@ -215,7 +239,7 @@ export default function AppSidebar() {
                     <Bell />
                     Notifications
                   </DropdownMenuItem>
-                </DropdownMenuGroup>
+                </DropdownMenuGroup> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
                   <LogOut />

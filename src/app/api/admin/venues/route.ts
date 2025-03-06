@@ -145,12 +145,14 @@ export async function POST(req: NextRequest) {
       'address.city',
       'address.state',
       'address.postalCode',
-      'sports'
+      'sports',
+      'amenities',
+      'locationUrl'
     ];
 
     // Validate all fields (including nested address fields)
     const { isValid, missingFields } = validateRequiredFields(
-      { name, address, sports, images, description },
+      { name, address, sports, images, description, amenities, locationUrl },
       requiredFields
     );
 
@@ -175,6 +177,24 @@ export async function POST(req: NextRequest) {
             AvailableStates
           ).join(', ')}.`
         },
+        { status: 400 }
+      );
+    }
+
+    // Validate locationUrl is a valid URL
+    const urlRegex = /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,})(\/\S*)?$/i;
+
+    if (!urlRegex.test(locationUrl)) {
+      return NextResponse.json(
+        { message: 'Invalid location URL format.' },
+        { status: 400 }
+      );
+    }
+
+    // Ensure amenities is a non-empty array
+    if (!Array.isArray(amenities) || amenities.length === 0) {
+      return NextResponse.json(
+        { message: 'At least one amenity must be provided.' },
         { status: 400 }
       );
     }

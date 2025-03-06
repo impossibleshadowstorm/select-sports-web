@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTheme } from 'next-themes';
 import * as z from 'zod';
 import {
   Form,
@@ -21,6 +22,7 @@ import {
   CommonResponseType
 } from '@/lib/api-client';
 import { signOut, useSession } from 'next-auth/react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const changePasswordSchema = z
   .object({
@@ -39,6 +41,7 @@ export default function ChangePasswordForm() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [isCurrentPasswordValid, setIsCurrentPasswordValid] = useState(false);
+  const { theme } = useTheme();
 
   const form = useForm<z.infer<typeof changePasswordSchema>>({
     resolver: zodResolver(changePasswordSchema),
@@ -99,76 +102,83 @@ export default function ChangePasswordForm() {
   };
 
   return (
-    <div className='mt-8 rounded-lg border p-4'>
-      <h2 className='mb-4 text-lg font-semibold'>Change Password</h2>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-          {/* Current Password Field */}
-          <FormField
-            control={form.control}
-            name='currentPassword'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Current Password</FormLabel>
-                <FormControl>
-                  <Input
-                    type='password'
-                    placeholder='Enter current password'
-                    disabled={loading}
-                    {...field}
-                    onBlur={() => checkCurrentPassword(field.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <Card className='mt-8 rounded-lg border p-4'>
+      <CardHeader>
+        <CardTitle>Change Password</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+            {/* Current Password Field */}
+            <FormField
+              control={form.control}
+              name='currentPassword'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='password'
+                      placeholder='Enter current password'
+                      disabled={loading}
+                      className='border border-border bg-background text-foreground'
+                      {...field}
+                      onBlur={() => checkCurrentPassword(field.value)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* New Password Field */}
-          <FormField
-            control={form.control}
-            name='newPassword'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>New Password</FormLabel>
-                <FormControl>
-                  <Input
-                    type='password'
-                    placeholder='Enter new password'
-                    disabled={loading || !isCurrentPasswordValid}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            {/* New Password Field */}
+            <FormField
+              control={form.control}
+              name='newPassword'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>New Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='password'
+                      placeholder='Enter new password'
+                      disabled={loading || !isCurrentPasswordValid}
+                      className='border border-border bg-background text-foreground'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* Confirm New Password Field */}
-          <FormField
-            control={form.control}
-            name='confirmNewPassword'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm New Password</FormLabel>
-                <FormControl>
-                  <Input
-                    type='password'
-                    placeholder='Re-enter new password'
-                    disabled={loading || !isCurrentPasswordValid}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            {/* Confirm New Password Field */}
+            <FormField
+              control={form.control}
+              name='confirmNewPassword'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm New Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='password'
+                      placeholder='Re-enter new password'
+                      disabled={loading || !isCurrentPasswordValid}
+                      className='border border-border bg-background text-foreground'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <Button type='submit' disabled={loading || !isCurrentPasswordValid}>
-            Update Password
-          </Button>
-        </form>
-      </Form>
-    </div>
+            <Button type='submit' disabled={loading || !isCurrentPasswordValid}>
+              Update Password
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }

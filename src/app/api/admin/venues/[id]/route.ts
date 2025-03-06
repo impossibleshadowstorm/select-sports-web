@@ -8,12 +8,15 @@ interface VenueRequest {
   name?: string;
   address?: Address;
   sports?: Sport[];
+  amenities: string[];
+  locationUrl: string;
 }
 
 export async function PATCH(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
     const id = req.nextUrl.pathname.split('/').pop();
-    const { name, address, sports }: VenueRequest = await req.json();
+    const { name, address, sports, amenities, locationUrl }: VenueRequest =
+      await req.json();
 
     const updateData: { [key: string]: any } = {};
 
@@ -44,6 +47,25 @@ export async function PATCH(req: NextRequest) {
       updateData.sports = {
         connect: sports.map((sportId) => ({ id: sportId })) // Connect new sports
       };
+    }
+
+    // Update amenities if provided
+    if (Array.isArray(amenities) && amenities.length > 0) {
+      updateData.amenities = amenities;
+    }
+
+    // Validate and update locationUrl
+    if (locationUrl) {
+      const urlRegex = /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,})(\/\S*)?$/i;
+
+      if (!urlRegex.test(locationUrl.trim())) {
+        return NextResponse.json(
+          { message: 'Invalid location URL format.' },
+          { status: 400 }
+        );
+      }
+
+      updateData.locationUrl = locationUrl;
     }
 
     // Ensure there's something to update
