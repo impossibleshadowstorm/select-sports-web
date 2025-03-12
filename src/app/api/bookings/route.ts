@@ -75,3 +75,41 @@ export async function POST(req: AuthenticatedRequest): Promise<NextResponse> {
     }
   });
 }
+
+export async function GET(req: AuthenticatedRequest): Promise<NextResponse> {
+  return await authenticate(req, async () => {
+    try {
+      const { id } = req.user as { id: string };
+
+      const bookings = await prisma.booking.findMany({
+        where: {
+          user: {
+            id: {
+              in: [id]
+            }
+          }
+        },
+        include: {
+          slot: {
+            include: {
+              sport: true
+            }
+          }
+        }
+      });
+
+      return NextResponse.json(
+        {
+          message: 'User Bookings Fetched successfully.',
+          data: bookings
+        },
+        { status: 200 }
+      );
+    } catch (error: any) {
+      return NextResponse.json(
+        { error: `Failed to fetch user booking: ${error.message}` },
+        { status: 500 }
+      );
+    }
+  });
+}

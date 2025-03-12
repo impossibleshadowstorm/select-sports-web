@@ -99,9 +99,10 @@ export async function POST(req: AuthenticatedRequest) {
             data: { balance: { decrement: slotPrice } }
           });
 
+          let transaction;
           await prisma.$transaction(async (prisma) => {
             // Insert transaction
-            const transaction = await prisma.transaction.create({
+            transaction = await prisma.transaction.create({
               data: {
                 userId: userId,
                 method: 'WALLET',
@@ -122,7 +123,11 @@ export async function POST(req: AuthenticatedRequest) {
 
             return { transaction, walletTransaction };
           });
-          const bookingResponse = await bookSlot(userId, slotId);
+          const bookingResponse = await bookSlot(
+            userId,
+            slotId,
+            transaction!.id
+          );
           return NextResponse.json(bookingResponse, {
             status: bookingResponse.status
           });
@@ -136,7 +141,7 @@ export async function POST(req: AuthenticatedRequest) {
       const razorpayOrder = await razorpay.orders.create({
         amount: amountToPay * 100, // Convert to paise
         currency: 'INR',
-        receipt: `receipt_#123}`,
+        receipt: `receipt_#123`, // Receipt length must be below 40 chars.
         payment_capture: true
       });
 
@@ -163,6 +168,7 @@ export async function POST(req: AuthenticatedRequest) {
           { status: 402 }
         );
       }
+
       return NextResponse.json(
         {
           success: false,
@@ -186,6 +192,7 @@ export async function POST(req: AuthenticatedRequest) {
         { status: 402 }
       );
     } catch (error: any) {
+      console.log(error);
       return NextResponse.json(
         { success: false, message: 'An error occurred.', error: error.message },
         { status: 500 }

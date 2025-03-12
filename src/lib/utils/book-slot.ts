@@ -1,6 +1,10 @@
 import prisma from '@/lib/utils/prisma-client';
 
-export async function bookSlot(userId: string, slotId: string) {
+export async function bookSlot(
+  userId: string,
+  slotId: string,
+  transactionId: string
+) {
   try {
     if (!slotId) {
       return {
@@ -98,7 +102,8 @@ export async function bookSlot(userId: string, slotId: string) {
       data: {
         status: 'CONFIRMED',
         slotId,
-        userId
+        userId,
+        transactionId: transactionId
       }
     });
 
