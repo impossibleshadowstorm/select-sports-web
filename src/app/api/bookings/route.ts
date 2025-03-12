@@ -91,8 +91,17 @@ export async function GET(req: AuthenticatedRequest): Promise<NextResponse> {
         },
         include: {
           slot: {
-            include: {
-              sport: true
+            select: {
+              startTime: true,
+              endTime: true,
+              price: true,
+              discountedPrice: true,
+              sport: true,
+              venue: {
+                include: {
+                  address: true
+                }
+              }
             }
           }
         }
