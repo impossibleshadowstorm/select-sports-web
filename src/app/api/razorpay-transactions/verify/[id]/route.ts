@@ -139,9 +139,10 @@ export async function POST(req: AuthenticatedRequest) {
             return { transaction, walletTransaction };
           });
 
+          let transaction;
           await prisma.$transaction(async (prisma) => {
             // Insert transaction
-            const transaction = await prisma.transaction.create({
+            transaction = await prisma.transaction.create({
               data: {
                 userId: userId,
                 method: 'RAZORPAY',
@@ -180,7 +181,11 @@ export async function POST(req: AuthenticatedRequest) {
             data: { balance: { decrement: walletBalance } }
           });
 
-          const bookingResponse = await bookSlot(userId, slotId);
+          const bookingResponse = await bookSlot(
+            userId,
+            slotId,
+            transaction!.id
+          );
           return NextResponse.json(bookingResponse, {
             status: bookingResponse.status
           });
@@ -193,10 +198,11 @@ export async function POST(req: AuthenticatedRequest) {
         }
       }
       if (paidAmount == slotPrice) {
+        let transaction;
         //Insert data for wallet transaction and razorpy transaction with appropriate data
         await prisma.$transaction(async (prisma) => {
           // Insert transaction
-          const transaction = await prisma.transaction.create({
+          transaction = await prisma.transaction.create({
             data: {
               userId: userId,
               method: 'RAZORPAY',
@@ -218,7 +224,8 @@ export async function POST(req: AuthenticatedRequest) {
 
           return { transaction, razorpayTransaction };
         });
-        const bookingResponse = await bookSlot(userId, slotId);
+
+        const bookingResponse = await bookSlot(userId, slotId, transaction!.id);
         return NextResponse.json(bookingResponse, {
           status: bookingResponse.status
         });
