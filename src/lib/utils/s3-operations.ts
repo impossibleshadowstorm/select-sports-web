@@ -20,7 +20,9 @@ export const uploadFileToS3 = async (file: File): Promise<string | void> => {
     await s3.send(command);
 
     return `https://${params.Bucket}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${params.Key}`;
-  } catch (err) {}
+  } catch (err) {
+    throw err;
+  }
 };
 
 export const deleteS3Image = async (imageUrl: string) => {

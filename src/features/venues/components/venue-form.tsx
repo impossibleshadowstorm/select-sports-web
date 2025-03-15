@@ -32,28 +32,18 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
-const MAX_FILE_SIZE = 5000000;
-const ACCEPTED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp'
-];
+// const MAX_FILE_SIZE = 50000000;
+// const ACCEPTED_IMAGE_TYPES = [
+//   "image/jpeg",
+//   "image/jpg",
+//   "image/png",
+//   "image/webp",
+// ];
 
 // Validation Schema
 const formSchema = z.object({
   name: z.string().min(5, 'Venue name must be at least 5 characters.'),
-  images: z
-    .any()
-    .refine((files) => files?.length > 2, 'At least 3 Images are required.')
-    .refine(
-      (files) => files?.[0]?.size <= MAX_FILE_SIZE,
-      `Max file size is 5MB.`
-    )
-    .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      '.jpg, .jpeg, .png and .webp files are accepted.'
-    ),
+  images: z.array(z.string()).min(3, 'At least 3 Images are required.'),
   description: z
     .string()
     .min(10, 'Description is required and must be at least 10 characters.'),
@@ -162,14 +152,6 @@ export default function VenueForm({
                           (image: string | { url: string }) =>
                             typeof image === 'string' ? { url: image } : image
                         )}
-                        onValueChange={(files) => {
-                          if (Array.isArray(files)) {
-                            form.setValue('images', [
-                              ...(form.getValues('images') ?? []),
-                              ...files
-                            ]);
-                          }
-                        }}
                         maxFiles={4}
                         maxSize={4 * 1024 * 1024}
                         disabled={loading}
