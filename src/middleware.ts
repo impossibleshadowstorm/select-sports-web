@@ -11,7 +11,7 @@ const { auth } = NextAuth(authConfig);
 
 export default auth(async (req) => {
   if (!req.auth) {
-    const url = req.url.replace(req.nextUrl.pathname, '/');
+    const url = req.url.replace(req.nextUrl.pathname, '/login');
     return Response.redirect(url);
   }
   // Extract the token from the session
@@ -24,18 +24,18 @@ export default auth(async (req) => {
 
     if (response.status !== 200 || !response.data) {
       // If the /me request fails, redirect to the home page
-      const url = req.url.replace(req.nextUrl.pathname, '/');
+      const url = req.url.replace(req.nextUrl.pathname, '/login');
       return Response.redirect(url);
     }
 
     // Check if the user's role is ADMIN
     if (response.data.role !== Role.ADMIN) {
       // If the user is not an admin, redirect to the home page
-      const url = req.url.replace(req.nextUrl.pathname, '/');
+      const url = req.url.replace(req.nextUrl.pathname, '/login');
       return Response.redirect(url);
     }
   } catch (error) {
-    const url = req.url.replace(req.nextUrl.pathname, '/');
+    const url = req.url.replace(req.nextUrl.pathname, '/login');
     return Response.redirect(url);
   }
 });

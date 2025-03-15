@@ -192,7 +192,6 @@ export async function POST(req: AuthenticatedRequest) {
         { status: 402 }
       );
     } catch (error: any) {
-      console.log(error);
       return NextResponse.json(
         { success: false, message: 'An error occurred.', error: error.message },
         { status: 500 }

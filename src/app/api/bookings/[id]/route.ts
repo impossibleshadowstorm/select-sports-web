@@ -260,7 +260,7 @@ export async function GET(req: AuthenticatedRequest) {
       }
 
       // Remove both teams and only keep the relevant one
-      const { team1, team2, ...slotWithoutTeams } = bookingData.slot;
+      const { team1, team2, ...slotWithoutTeams } = bookingData.slot; // eslint-disable-line
 
       const responseData = {
         ...bookingData,
@@ -277,7 +277,6 @@ export async function GET(req: AuthenticatedRequest) {
         { status: 200 }
       );
     } catch (error: any) {
-      console.error('Error fetching booking data:', error);
       return NextResponse.json(
         { success: false, message: 'An error occurred.', error: error.message },
         { status: 500 }
