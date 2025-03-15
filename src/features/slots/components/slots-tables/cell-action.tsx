@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { authorizedDelete } from '@/lib/api-client';
+import { authorizedDelete, get } from '@/lib/api-client';
 import { Slot } from '@prisma/client';
 import { Edit, MoreHorizontal, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -26,6 +26,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [checkBookingsOpen, setCheckBookingsOpen] = useState(false);
+  const [slotBookings, setSlotBookings] = useState([]);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -42,6 +43,24 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     }
   };
 
+  const onCheckBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await get(`/slots/${data.id}`);
+      if (!response || !response.data) {
+        throw new Error('Invalid response from the server.');
+      }
+
+      const bookings = response.data.bookings || [];
+      setSlotBookings(bookings);
+      toast.success('Bookings loaded successfully');
+    } catch (error) {
+      toast.error('Failed to load bookings.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <AlertModal
@@ -55,6 +74,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         isOpen={checkBookingsOpen}
         onClose={() => setCheckBookingsOpen(false)}
         loading={loading}
+        bookings={slotBookings}
       />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
@@ -67,7 +87,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
           <DropdownMenuItem
-            onClick={() => setCheckBookingsOpen(true)}
+            onClick={() => {
+              onCheckBookings();
+              setCheckBookingsOpen(true);
+            }}
             disabled={loading}
           >
             <Edit className='mr-2 h-4 w-4' /> Check Bookings
