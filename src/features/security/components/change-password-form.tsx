@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTheme } from 'next-themes';
 import * as z from 'zod';
 import {
   Form,
@@ -41,7 +40,6 @@ export default function ChangePasswordForm() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [isCurrentPasswordValid, setIsCurrentPasswordValid] = useState(false);
-  const { theme } = useTheme();
 
   const form = useForm<z.infer<typeof changePasswordSchema>>({
     resolver: zodResolver(changePasswordSchema),

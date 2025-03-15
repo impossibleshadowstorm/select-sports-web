@@ -8,7 +8,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -32,11 +31,8 @@ import {
 } from '@/components/ui/sidebar';
 import { navItems } from '@/constants/data';
 import {
-  BadgeCheck,
-  Bell,
   ChevronRight,
   ChevronsUpDown,
-  CreditCard,
   GalleryVerticalEnd,
   LogOut
 } from 'lucide-react';
@@ -59,7 +55,7 @@ export default function AppSidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   // eslint-disable-next-line
-  const { state, isMobile } = useSidebar();
+  const { state, isMobile } = useSidebar(); // eslint-disable-line
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
@@ -69,11 +65,12 @@ export default function AppSidebar() {
         const name = await res.data.name;
         setUserName(name || 'Guest User');
       } catch (error) {
-        console.error(error);
+        console.error(error); // eslint-disable-line
       }
     }
     fetchUser();
-  }, []);
+  }, []); // eslint-disable-line
+
   const getInitials = (name: string) => {
     const words = name.trim().split(' ');
     const initials = words

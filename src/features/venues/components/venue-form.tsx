@@ -110,8 +110,6 @@ export default function VenueForm({
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log('Submitting Location URL:', values.locationUrl);
-
     const body = {
       ...values,
       images: values.images.filter(

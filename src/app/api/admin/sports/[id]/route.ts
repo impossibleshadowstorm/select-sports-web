@@ -49,14 +49,10 @@ export async function PATCH(req: NextRequest) {
   });
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  return await authenticateAdmin(req as NextRequest, async () => {
+export async function DELETE(req: NextRequest) {
+  return await authenticateAdmin(req, async () => {
     try {
-      const { id } = params;
-
+      const id = req.nextUrl.pathname.split('/').pop();
       // Ensure ID is provided
       if (!id) {
         return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -69,7 +65,6 @@ export async function DELETE(
 
       return NextResponse.json({ success: true, message: 'Sport deleted' });
     } catch (error) {
-      console.error('Error deleting sport:', error);
       return NextResponse.json(
         { error: 'Failed to delete sport' },
         { status: 500 }

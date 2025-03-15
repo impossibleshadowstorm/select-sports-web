@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Source_Sans_3, Manrope } from 'next/font/google';
-
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { siteDetails } from '@/data/siteDetails';
-
 import './globals.css';
+import { Toaster } from '@/components/ui/sonner';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import NextTopLoader from 'nextjs-toploader';
 
 const manrope = Manrope({ subsets: ['latin'] });
 const sourceSans = Source_Sans_3({ subsets: ['latin'] });
@@ -36,7 +35,7 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
@@ -49,9 +48,11 @@ export default function RootLayout({
         {siteDetails.googleAnalyticsId && (
           <GoogleAnalytics gaId={siteDetails.googleAnalyticsId} />
         )}
-        <Header />
-        <main>{children}</main>
-        <Footer />
+        <NextTopLoader showSpinner={false} />
+        <NuqsAdapter>
+          <Toaster />
+          {children}
+        </NuqsAdapter>
       </body>
     </html>
   );
