@@ -37,6 +37,10 @@ jobs:
           echo "NEXT_PUBLIC_SITE_BACKEND_HOST=${{ vars.NEXT_PUBLIC_SITE_BACKEND_HOST }}" >> .env
           echo "RAZORPAY_KEY_ID=${{ vars.RAZORPAY_KEY_ID }}" >> .env
           echo "RAZORPAY_KEY_SECRET=${{ vars.RAZORPAY_KEY_SECRET }}" >> .env
+          echo "NEXT_PUBLIC_AWS_ACCESS_KEY_ID=${{ vars.NEXT_PUBLIC_AWS_ACCESS_KEY_ID }}" >> .env
+          echo "NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY=${{ vars.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "NEXT_PUBLIC_AWS_REGION=${{ vars.NEXT_PUBLIC_AWS_REGION }}" >> .env
+          echo "NEXT_PUBLIC_AWS_BUCKET=${{ vars.NEXT_PUBLIC_AWS_BUCKET }}" >> .env
 
       # - name: 🏗 Build Next.js App
       #   run: yarn build
