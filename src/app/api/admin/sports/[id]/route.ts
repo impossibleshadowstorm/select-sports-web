@@ -12,7 +12,6 @@ interface SportRequestBody {
 
 export async function PATCH(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
-    // const { id } = await params;
     const id = req.nextUrl.pathname.split('/').pop();
     const { name, rules, totalPlayer }: SportRequestBody = await req.json();
 
@@ -54,25 +53,27 @@ export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const { id } = params;
+  return await authenticateAdmin(req as NextRequest, async () => {
+    try {
+      const { id } = params;
 
-    // Ensure ID is provided
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+      // Ensure ID is provided
+      if (!id) {
+        return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+      }
+
+      // Delete the sport entry
+      await prisma.sport.delete({
+        where: { id }
+      });
+
+      return NextResponse.json({ success: true, message: 'Sport deleted' });
+    } catch (error) {
+      console.error('Error deleting sport:', error);
+      return NextResponse.json(
+        { error: 'Failed to delete sport' },
+        { status: 500 }
+      );
     }
-
-    // Delete the sport entry
-    await prisma.sport.delete({
-      where: { id }
-    });
-
-    return NextResponse.json({ success: true, message: 'Sport deleted' });
-  } catch (error) {
-    console.error('Error deleting sport:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete sport' },
-      { status: 500 }
-    );
-  }
+  });
 }

@@ -40,7 +40,6 @@ export async function POST(req: AuthenticatedRequest) {
         status: 200
       });
     } catch (error) {
-      console.error('Error verifying password:', error);
       return NextResponse.json(
         { message: 'Failed to verify password' },
         { status: 500 }
