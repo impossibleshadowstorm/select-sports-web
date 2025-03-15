@@ -402,7 +402,6 @@ export default function VenueForm({
                 </FormItem>
               )}
             />
-            ;
             <Button type='submit' disabled={loading}>
               {initialData?.id ? 'Update Venue' : 'Add Venue'}
             </Button>
