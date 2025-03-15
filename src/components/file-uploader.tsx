@@ -1,5 +1,4 @@
 'use client';
-import { CrossIcon } from 'lucide-react';
 import Image from 'next/image';
 import * as React from 'react';
 import Dropzone, {
@@ -7,11 +6,10 @@ import Dropzone, {
   type FileRejection
 } from 'react-dropzone';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+// import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useControllableState } from '@/hooks/use-controllable-state';
-import { cn, formatBytes } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { uploadFileToS3 } from '@/lib/utils/s3-operations';
 
 interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -21,7 +19,7 @@ interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
    * @default undefined
    * @example value={files}
    */
-  value?: File[];
+  value?: any;
 
   /**
    * Function to be called when the value changes.
@@ -106,11 +104,14 @@ export function FileUploader(props: FileUploaderProps) {
     ...dropzoneProps
   } = props;
 
-  const [files, setFiles] = useControllableState({
-    prop: valueProp,
+  const [files, setFiles] = useControllableState<any>({
+    prop: valueProp?.map((file: any) =>
+      typeof file === 'string' ? { url: file } : file
+    ),
     onChange: onValueChange
   });
 
+  // eslint-disable-next-line
   const [uploadProgress, setUploadProgress] = React.useState<
     Record<string, number>
   >({});
@@ -142,9 +143,14 @@ export function FileUploader(props: FileUploaderProps) {
       );
 
       // Filter out failed uploads
-      const successfulUploads = uploadedUrls.filter(
-        (url): url is string => url !== null
+      const successfulUploads = uploadedUrls.filter((url): url is string =>
+        Boolean(url)
       );
+
+      setFiles((prevFiles: any) => [
+        ...(prevFiles ?? []),
+        ...successfulUploads.map((url) => ({ url }))
+      ]);
 
       if (onUpload) {
         if (successfulUploads.length === filesToUpload.length) {
@@ -169,19 +175,22 @@ export function FileUploader(props: FileUploaderProps) {
       return;
     }
 
-    const newFiles = acceptedFiles
-      .filter((file) => file instanceof File)
-      .map((file) =>
-        Object.assign(file, {
-          preview: URL.createObjectURL(file)
-        })
-      );
+    // const newFiles = acceptedFiles
+    // .filter((file) => file instanceof File)
+    // .map((file) =>
+    //   Object.assign(file, {
+    //     preview: URL.createObjectURL(file)
+    //   })
+    // );
 
-    setFiles((prevFiles) => [...(prevFiles ?? []), ...newFiles]);
+    // setFiles((prevFiles) => [...(prevFiles ?? []), ...newFiles]);
 
     // Call handleUpload outside of setFiles to ensure latest state is used
     setTimeout(() => {
-      handleUpload(newFiles);
+      handleUpload(acceptedFiles);
+      // handleUpload(acceptedFiles).then((uploadedUrls) => {
+      //   setFiles((prevFiles) => [...(prevFiles ?? []), ...uploadedUrls.map(url => ({ url }))]);
+      // });
     }, 0);
 
     if (rejectedFiles.length > 0) {
@@ -193,23 +202,23 @@ export function FileUploader(props: FileUploaderProps) {
     // handleUpload(newFiles); // Upload to S3
   };
 
-  function onRemove(index: number) {
-    if (!files) return;
-    const newFiles = files.filter((_, i) => i !== index);
-    setFiles(newFiles);
-    onValueChange?.(newFiles);
-  }
+  // function onRemove(index: number) {
+  //   if (!files) return;
+  //   const newFiles = files.filter((_, i) => i !== index);
+  //   setFiles(newFiles);
+  //   // onValueChange?.(newFiles);
+  // }
 
-  React.useEffect(() => {
-    return () => {
-      if (!files) return;
-      files.forEach((file) => {
-        if (isFileWithPreview(file)) {
-          URL.revokeObjectURL(file.preview);
-        }
-      });
-    };
-  }, []); // eslint-disable-line
+  // React.useEffect(() => {
+  //   return () => {
+  //     if (!files) return;
+  //     files.forEach((file) => {
+  //       if ( file && isFileWithPreview(file)) {
+  //         URL.revokeObjectURL(file.preview);
+  //       }
+  //     });
+  //   };
+  // }, []); // eslint-disable-line
 
   const isDisabled = disabled || (files?.length ?? 0) >= maxFiles;
 
@@ -251,12 +260,12 @@ export function FileUploader(props: FileUploaderProps) {
       {files?.length ? (
         <ScrollArea className='h-fit w-full px-3'>
           <div className='max-h-48 space-y-4'>
-            {files?.map((file, index) => (
+            {files?.map((file: any, index: any) => (
               <FileCard
                 key={index}
                 file={file}
-                onRemove={() => onRemove(index)}
-                progress={uploadProgress[file.name] ?? 0}
+                // onRemove={() => onRemove(index)}
+                // progress={uploadProgress[file?.name] ?? 0}
               />
             ))}
           </div>
@@ -267,42 +276,37 @@ export function FileUploader(props: FileUploaderProps) {
 }
 
 interface FileCardProps {
-  file: File;
-  onRemove: () => void;
-  progress?: number;
+  file: { url: string };
+  // onRemove: () => void;
+  // progress?: number;
 }
 
-function FileCard({ file, progress, onRemove }: FileCardProps) {
-  const imageSrc =
-    typeof file === 'string'
-      ? file
-      : isFileWithPreview(file)
-        ? file.preview
-        : undefined;
+function FileCard({ file }: FileCardProps) {
+  const imageSrc = typeof file.url === 'string' ? file.url : undefined;
   return (
     <div className='relative flex items-center space-x-4'>
       <div className='flex flex-1 space-x-4'>
         {imageSrc && (
           <Image
             src={imageSrc}
-            alt={file?.name || imageSrc.split('/').pop() || 'Uploaded image'}
+            alt={file?.url || imageSrc.split('/').pop() || 'Uploaded image'}
             width={48}
             height={48}
             loading='lazy'
             className='aspect-square shrink-0 rounded-md object-cover'
           />
         )}
-        <div className='flex w-full flex-col gap-2'>
+        <div className='flex w-full flex-col justify-center gap-2'>
           <p className='line-clamp-1 text-sm font-medium text-foreground/80'>
-            {file.name}
+            {file.url}
           </p>
-          <p className='text-xs text-muted-foreground'>
+          {/* <p className='text-xs text-muted-foreground'>
             {formatBytes(file.size)}
-          </p>
-          {progress !== undefined && <Progress value={progress} />}
+          </p> */}
+          {/* {progress !== undefined && <Progress value={progress} />} */}
         </div>
       </div>
-      <Button
+      {/* <Button
         type='button'
         variant='outline'
         size='icon'
@@ -311,11 +315,7 @@ function FileCard({ file, progress, onRemove }: FileCardProps) {
       >
         <CrossIcon className='size-4' aria-hidden='true' />
         <span className='sr-only'>Remove file</span>
-      </Button>
+      </Button> */}
     </div>
   );
-}
-
-function isFileWithPreview(file: File): file is File & { preview: string } {
-  return 'preview' in file && typeof file.preview === 'string';
 }

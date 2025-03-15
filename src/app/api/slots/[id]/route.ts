@@ -38,7 +38,11 @@ export async function GET(req: NextRequest) {
           }
         },
         sport: true,
-        bookings: true,
+        bookings: {
+          include: {
+            user: true
+          }
+        },
         team1: true,
         team2: true,
         host: {

@@ -19,11 +19,12 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { authorizedPost } from '@/lib/api-client';
 import { FirstLetterCaps } from '@/lib/utils/string-utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AvailableStates, Sport } from '@prisma/client';
+import { AvailableStates, Sport, VenueAmenities } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
@@ -31,28 +32,18 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
-const MAX_FILE_SIZE = 5000000;
-const ACCEPTED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp'
-];
+// const MAX_FILE_SIZE = 50000000;
+// const ACCEPTED_IMAGE_TYPES = [
+//   "image/jpeg",
+//   "image/jpg",
+//   "image/png",
+//   "image/webp",
+// ];
 
 // Validation Schema
 const formSchema = z.object({
   name: z.string().min(5, 'Venue name must be at least 5 characters.'),
-  images: z
-    .any()
-    .refine((files) => files?.length > 2, 'At least 3 Images are required.')
-    .refine(
-      (files) => files?.[0]?.size <= MAX_FILE_SIZE,
-      `Max file size is 5MB.`
-    )
-    .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      '.jpg, .jpeg, .png and .webp files are accepted.'
-    ),
+  images: z.array(z.string()).min(3, 'At least 3 Images are required.'),
   description: z
     .string()
     .min(10, 'Description is required and must be at least 10 characters.'),
@@ -65,7 +56,13 @@ const formSchema = z.object({
       .length(6, 'Postal code must be exactly 6 digits.')
       .regex(/^\d{6}$/, 'Postal code must be numeric.')
   }),
-  sports: z.array(z.string()).min(1, 'At least one sport must be selected.')
+  sports: z.array(z.string()).min(1, 'At least one sport must be selected.'),
+  amenities: z
+    .array(z.string())
+    .min(1, 'At least one amenity must be selected.'),
+  locationUrl: z
+    .string()
+    .url('Invalid URL format. Example: https://maps.google.com')
 });
 
 export default function VenueForm({
@@ -92,7 +89,9 @@ export default function VenueForm({
       postalCode: initialData?.address?.postalCode || ''
     },
     state: initialData?.address?.state || '',
-    sports: initialData?.sports?.map((sport: Sport) => sport.id) || []
+    sports: initialData?.sports?.map((sport: Sport) => sport.id) || [],
+    amenities: initialData?.amenities || [],
+    locationUrl: initialData?.locationUrl || ''
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -106,7 +105,9 @@ export default function VenueForm({
       images: values.images.filter(
         (img: any) => typeof img === 'string' && img.startsWith('https')
       ),
-      address: { ...values.address, state: values.state }
+      address: { ...values.address, state: values.state },
+      amenities: values.amenities || [],
+      locationUrl: values.locationUrl || ''
     };
     startTransition(async () => {
       try {
@@ -151,14 +152,6 @@ export default function VenueForm({
                           (image: string | { url: string }) =>
                             typeof image === 'string' ? { url: image } : image
                         )}
-                        onValueChange={(files) => {
-                          if (Array.isArray(files)) {
-                            form.setValue('images', [
-                              ...(form.getValues('images') ?? []),
-                              ...files
-                            ]);
-                          }
-                        }}
                         maxFiles={4}
                         maxSize={4 * 1024 * 1024}
                         disabled={loading}
@@ -168,6 +161,7 @@ export default function VenueForm({
                             ...uploadedUrls
                           ]);
                         }}
+
                         // progresses={progresses}
                         // pass the onUpload function here for direct upload
                         // onUpload={uploadFiles}
@@ -179,7 +173,6 @@ export default function VenueForm({
                 </div>
               )}
             />
-
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
               <FormField
                 control={form.control}
@@ -336,6 +329,57 @@ export default function VenueForm({
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='locationUrl'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Google Maps URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='url'
+                      placeholder='Enter location URL'
+                      disabled={loading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='amenities'
+              render={() => (
+                <FormItem>
+                  <FormLabel>Amenities</FormLabel>
+                  <div className='grid grid-cols-2 gap-2'>
+                    {Object.values(VenueAmenities).map((amenity) => (
+                      <div key={amenity} className='flex items-center gap-2'>
+                        <Checkbox
+                          id={amenity}
+                          checked={form.watch('amenities')?.includes(amenity)}
+                          onCheckedChange={(checked) => {
+                            const currentAmenities =
+                              form.getValues('amenities') || [];
+                            form.setValue(
+                              'amenities',
+                              checked
+                                ? [...currentAmenities, amenity]
+                                : currentAmenities.filter((a) => a !== amenity)
+                            );
+                          }}
+                        />
+                        <label htmlFor={amenity} className='text-sm'>
+                          {FirstLetterCaps(amenity.replace(/_/g, ' '))}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

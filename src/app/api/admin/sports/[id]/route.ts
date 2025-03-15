@@ -53,7 +53,6 @@ export async function DELETE(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
     try {
       const id = req.nextUrl.pathname.split('/').pop();
-
       // Ensure ID is provided
       if (!id) {
         return NextResponse.json({ error: 'ID is required' }, { status: 400 });
