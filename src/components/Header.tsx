@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { Transition } from '@headlessui/react';
 import { HiOutlineXMark, HiBars3 } from 'react-icons/hi2';
-import { FaFingerprint } from 'react-icons/fa';
+import { FaFingerprint, FaFutbol } from 'react-icons/fa';
 
 import Container from './Container';
 import { siteDetails } from '@/data/siteDetails';
@@ -23,7 +23,8 @@ const Header: React.FC = () => {
         <nav className='mx-auto flex items-center justify-between bg-white px-5 py-2 shadow-md md:bg-transparent md:py-10 md:shadow-none'>
           {/* Logo */}
           <Link href='/' className='flex items-center gap-2'>
-            <FaFingerprint className='h-7 w-7 min-w-fit text-foreground' />
+            {/* <FaFingerprint className='h-7 w-7 min-w-fit text-foreground' /> */}
+            <FaFutbol className='h-7 w-7 min-w-fit text-[#0b3d0b]' />
             <span className='manrope cursor-pointer text-xl font-semibold text-foreground'>
               {siteDetails.siteName}
             </span>
@@ -44,7 +45,7 @@ const Header: React.FC = () => {
             <li>
               <Link
                 href='#cta'
-                className='hover:bg-primary-accent rounded-full bg-primary px-8 py-3 text-black transition-colors'
+                className='rounded-full bg-[#1d8c50] px-8 py-3 text-black transition-colors hover:bg-[#1d7a4a]'
               >
                 Download
               </Link>

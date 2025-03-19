@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import React from 'react';
-import { FaFingerprint } from 'react-icons/fa';
+import { FaFingerprint, FaFutbol } from 'react-icons/fa';
 
 import { siteDetails } from '@/data/siteDetails';
 import { footerDetails } from '@/data/footer';
@@ -12,7 +12,8 @@ const Footer: React.FC = () => {
       <div className='mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 px-6 md:grid-cols-3'>
         <div>
           <Link href='/' className='flex items-center gap-2'>
-            <FaFingerprint className='h-5 w-5 min-w-fit md:h-7 md:w-7' />
+            {/* <FaFingerprint className='h-5 w-5 min-w-fit md:h-7 md:w-7' /> */}
+            <FaFutbol className='h-7 w-7 min-w-fit text-[#0b3d0b]' />
             <h3 className='manrope cursor-pointer text-xl font-semibold'>
               {siteDetails.siteName}
             </h3>
@@ -63,6 +64,7 @@ const Footer: React.FC = () => {
                       href={footerDetails.socials[platformName]}
                       key={platformName}
                       aria-label={platformName}
+                      className='text-[#1d8c50] hover:text-[#17633a]'
                     >
                       {getPlatformIconByName(platformName)}
                     </Link>
@@ -78,7 +80,7 @@ const Footer: React.FC = () => {
           Copyright &copy; {new Date().getFullYear()} {siteDetails.siteName}.
           All rights reserved.
         </p>
-        <p className='mt-2 text-sm text-gray-500'>
+        {/* <p className='mt-2 text-sm text-gray-500'>
           Made with &hearts; by{' '}
           <a href='https://nexilaunch.com' target='_blank'>
             Nexi Launch
@@ -92,7 +94,7 @@ const Footer: React.FC = () => {
           >
             Youthmind
           </a>
-        </p>
+        </p> */}
       </div>
     </footer>
   );

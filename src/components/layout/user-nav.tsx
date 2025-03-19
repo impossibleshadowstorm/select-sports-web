@@ -13,8 +13,36 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { authorizedGet } from '@/lib/api-client';
+import { useEffect, useState } from 'react';
+
 export function UserNav() {
   const { data: session } = useSession();
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await authorizedGet('/user', session?.user?.id!);
+        const name = await res.data.name;
+        setUserName(name || 'Guest User');
+      } catch (error) {
+        console.error(error); // eslint-disable-line
+      }
+    }
+    fetchUser();
+  }, []); // eslint-disable-line
+
+  const getInitials = (name: string) => {
+    const words = name.trim().split(' ');
+    const initials = words
+      .filter((n) => n.length > 0) // Remove empty strings
+      .map((n) => n[0].toUpperCase()) // Take first letter
+      .slice(0, 2) // Get first two letters
+      .join('');
+    return initials;
+  };
+
   if (session) {
     return (
       <DropdownMenu>
@@ -25,7 +53,7 @@ export function UserNav() {
                 src={session.user?.image ?? ''}
                 alt={session.user?.name ?? ''}
               />
-              <AvatarFallback>{session.user?.name?.[0]}</AvatarFallback>
+              <AvatarFallback>{getInitials(userName)}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>

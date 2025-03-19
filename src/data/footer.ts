@@ -8,22 +8,22 @@ export const footerDetails: {
   socials: ISocials;
 } = {
   subheading:
-    'Empowering businesses with cutting-edge financial technology solutions.',
+    'Your go-to platform for booking football slots and managing teams effortlessly.',
   quickLinks: [
     {
       text: 'Features',
       url: '#features'
     },
-    {
-      text: 'Pricing',
-      url: '#pricing'
-    },
+    // {
+    //   text: 'Pricing',
+    //   url: '#pricing'
+    // },
     {
       text: 'Testimonials',
       url: '#testimonials'
     }
   ],
-  email: 'address@yoursite.com',
+  email: 'support@selectsports.com',
   telephone: '+1 (123) 456-7890',
   socials: {
     // github: 'https://github.com',

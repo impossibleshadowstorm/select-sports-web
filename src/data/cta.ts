@@ -1,7 +1,7 @@
 export const ctaDetails = {
-  heading: 'Join Over 1 Million Users To Transform Your Finances',
+  heading: 'Join Thousands of Players and Book Your Perfect Sport Slot',
   subheading:
-    'Your journey to financial freedom starts here. Download Finwise today and take the first step towards a brighter financial future!',
+    'Take your game to the next level! Discover top venues, manage your team, and enjoy a seamless booking experience with Select Sports.',
   appStoreUrl: '#',
   googlePlayUrl: '#'
 };

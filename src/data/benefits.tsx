@@ -14,79 +14,79 @@ import { IBenefit } from '@/types';
 
 export const benefits: IBenefit[] = [
   {
-    title: 'Smart Budgeting',
+    title: 'Easy Slot Booking',
     description:
-      'Take the guesswork out of managing your money. Our AI-powered budgeting tool adapts to your lifestyle and helps you stay on track.',
+      'Book your football slots effortlessly with just a few clicks. Enjoy a seamless booking experience designed for convenience.',
     bullets: [
       {
-        title: 'Intelligent Categorization',
+        title: 'Real-Time Availability',
         description:
-          'Automatically sorts your transactions for crystal-clear insights.',
+          'Check live availability and book your preferred slots instantly.',
         icon: <FiBarChart2 size={26} />
       },
       {
-        title: 'Customizable Goals',
-        description: 'Set and track financial objectives that matter to you.',
+        title: 'Flexible Scheduling',
+        description:
+          'Select from a variety of available slots to match your schedule.',
         icon: <FiTarget size={26} />
       },
       {
-        title: 'Predictive Analysis',
+        title: 'Instant Confirmation',
         description:
-          'Get ahead of your finances with spending forecasts and alerts.',
+          'Receive immediate confirmation for your bookings and cancellations.',
         icon: <FiTrendingUp size={26} />
       }
     ],
-    imageSrc: '/images/mockup-1.webp'
+    imageSrc: '/images/mockup-prf-1.png'
   },
   {
-    title: 'Seamless Investing',
+    title: 'Venue Details and Descriptions',
     description:
-      'Start building wealth today, no financial degree required. Finwise makes investing accessible and straightforward.',
+      'Discover detailed venue information, including available slots and facilities.',
     bullets: [
       {
-        title: 'Micro-Investing',
-        description: 'Begin with as little as $1 and watch your money grow.',
+        title: 'Comprehensive Descriptions',
+        description:
+          'View detailed descriptions of venues, including location and facilities.',
         icon: <FiDollarSign size={26} />
       },
       {
-        title: 'Expert Portfolios',
+        title: 'Slot Availability Overview',
         description:
-          'Choose from investment strategies tailored to your risk tolerance.',
+          'Check the availability of slots at each venue in real-time.',
         icon: <FiBriefcase size={26} />
       },
       {
-        title: 'Real-Time Performance',
-        description:
-          'Track your investments with easy-to-understand metrics and visuals.',
+        title: 'Location Details',
+        description: 'Easily find venue locations with integrated map support.',
         icon: <FiPieChart size={26} />
       }
     ],
-    imageSrc: '/images/mockup-2.webp'
+    imageSrc: '/images/venues-details-mockup.png'
   },
   {
-    title: 'Bank-Grade Security',
+    title: 'Enhanced Profile Management',
     description:
-      'Your financial data deserves the best protection. Rest easy knowing Finwise employs cutting-edge security measures.',
+      'Manage your profile with ease. Update your profile picture, personal details, and more for a personalized experience.',
     bullets: [
       {
-        title: 'Military-Grade Encryption',
+        title: 'Profile Picture Upload',
         description:
-          'Your information is safeguarded with the highest level of encryption.',
+          'Upload and update your profile picture effortlessly using AWS S3.',
         icon: <FiLock size={26} />
       },
       {
-        title: 'Biometric Authentication',
+        title: 'Real-Time Profile Update',
         description:
-          'Access your account securely with fingerprint or facial recognition.',
+          'Make changes to your profile and see them reflected instantly.',
         icon: <FiUser size={26} />
       },
       {
-        title: 'Real-Time Fraud Detection',
-        description:
-          'Our system constantly monitors for suspicious activity to keep your money safe.',
+        title: 'Easy Edit Options',
+        description: 'Edit your details with a user-friendly interface.',
         icon: <FiShield size={26} />
       }
     ],
-    imageSrc: '/images/mockup-1.webp'
+    imageSrc: '/images/profile-management-mockup.png'
   }
 ];

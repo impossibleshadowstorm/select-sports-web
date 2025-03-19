@@ -25,9 +25,9 @@ const FAQ: React.FC = () => {
           </p>
           <a
             href='mailto:'
-            className='mt-3 block text-center text-xl font-semibold text-secondary hover:underline lg:text-left lg:text-4xl'
+            className='mt-3 block text-center text-xl font-semibold text-[#1d8c50] hover:underline lg:text-left lg:text-4xl'
           >
-            help@finwise.com
+            help@selectsports.com
           </a>
         </div>
 
@@ -42,9 +42,9 @@ const FAQ: React.FC = () => {
                         {faq.question}
                       </span>
                       {open ? (
-                        <BiMinus className='h-5 w-5 text-secondary' />
+                        <BiMinus className='h-5 w-5 text-[#17633a]' />
                       ) : (
-                        <BiPlus className='h-5 w-5 text-secondary' />
+                        <BiPlus className='h-5 w-5 text-[#1d8c50]' />
                       )}
                     </DisclosureButton>
                     <DisclosurePanel className='text-foreground-accent px-4 pb-2 pt-4'>
