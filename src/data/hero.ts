@@ -1,6 +1,6 @@
 export const heroDetails = {
-  heading: 'Smart, Secure, Simple Financial Management',
+  heading: 'Book. Play. Win. — Your Sports Journey Starts Here',
   subheading:
-    'From effortless budgeting to real-time investment insights, Finwise puts you in control of your money like never before',
-  centerImageSrc: '/images/hero-mockup.webp'
+    'Discover available slots, manage your team, and enjoy a seamless sports experience — all with Select Sports',
+  centerImageSrc: '/images/mockup-mobile.png'
 };

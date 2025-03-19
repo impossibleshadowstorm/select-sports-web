@@ -5,20 +5,20 @@ import { IStats } from '@/types';
 
 export const stats: IStats[] = [
   {
-    title: '20M+',
-    icon: <BsBarChartFill size={34} className='text-blue-500' />,
+    title: '10K+',
+    icon: <BsBarChartFill size={34} className='text-[#17633a]' />,
     description:
-      'Transactions processed securely every day, providing real-time insights.'
+      'Slots booked successfully each month, ensuring smooth user experience.'
   },
   {
-    title: '5.0',
+    title: '4.9',
     icon: <BsFillStarFill size={34} className='text-yellow-500' />,
-    description: 'Star rating, consistently maintained across app stores.'
+    description:
+      'Average user rating across platforms, reflecting customer satisfaction.'
   },
   {
-    title: '200+ ',
+    title: '20+ ',
     icon: <PiGlobeFill size={34} className='text-green-600' />,
-    description:
-      'Financial Institutions, seamlessly integrated, so you can manage all accounts.'
+    description: 'Venues available with real-time booking and management.'
   }
 ];

@@ -63,6 +63,13 @@ export const columns: ColumnDef<SlotWithBookings>[] = [
     header: 'Max Players'
   },
   {
+    accessorKey: 'price',
+    header: 'Price',
+    cell: ({ row }) => {
+      return row.original?.discountedPrice;
+    }
+  },
+  {
     accessorKey: 'status',
     header: 'Status'
   },

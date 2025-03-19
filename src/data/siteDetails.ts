@@ -1,10 +1,10 @@
 export const siteDetails = {
-  siteName: 'Finwise',
+  siteName: 'SelectSports',
   siteUrl: 'https://finwise-omega.vercel.app/',
   metadata: {
-    title: 'Finwise - Next.js and Tailwind CSS Landing Page Template',
+    title: 'SelectSports - Book and Manage Your Sports Slots Effortlessly',
     description:
-      'Finwise empowers businesses with cutting-edge technology solutions to drive success and efficiency.'
+      'SelectSports allows you to book and manage sports slots easily. Stay updated with real-time schedules and seamless payments.'
   },
   language: 'en-us',
   locale: 'en-US',

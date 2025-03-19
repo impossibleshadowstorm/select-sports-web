@@ -4,27 +4,26 @@ import { siteDetails } from './siteDetails';
 export const faqs: IFAQ[] = [
   {
     question: `Is ${siteDetails.siteName} secure?`,
-    answer:
-      'Absolutely. We use bank-level encryption to protect your data and never store your login information. Plus, our biometric authentication adds an extra layer of security.'
+    answer: `Yes, your data is protected with advanced encryption protocols. We also ensure secure payment processing to keep your financial information safe.`
   },
   {
-    question: `Can I use ${siteDetails.siteName} on multiple devices?`,
-    answer:
-      'Absolutely! Your Finwise account syncs seamlessly across all your devices - smartphone, tablet, and computer.'
+    question: `Can I book slots for multiple players or teams?`,
+    answer: `Absolutely! With ${siteDetails.siteName}, you can book slots for individual players or entire teams in one go.`
   },
   {
-    question: 'Can I connect all my bank accounts?',
-    answer: `Yes! ${siteDetails.siteName} supports connections with over 10,000 financial institutions worldwide. Simply log in through our secure portal to link your accounts.`
+    question: `How can I check venue details before booking?`,
+    answer: `Each venue listed on ${siteDetails.siteName} includes detailed descriptions, images, and available facilities to help you make informed decisions.`
   },
   {
-    question:
-      'Do I need any financial expertise to use the investing features?',
-    answer:
-      'Not at all! Our expert-curated portfolios and educational resources make investing accessible to everyone, regardless of experience level.'
+    question: `Can I cancel my booking if my plans change?`,
+    answer: `Yes, you can cancel your booking easily through the app. Refund policies may vary based on the venue’s rules.`
   },
   {
-    question: 'What if I need help using the app?',
-    answer:
-      'Our dedicated support team is available 24/7 via chat or email. Plus, we offer extensive in-app tutorials and a comprehensive knowledge base to help you make the most of Finwise.'
+    question: `What if I face issues while booking or making a payment?`,
+    answer: `Our support team is available 24/7 via chat or email to assist you. Additionally, you can find helpful guides in our knowledge base for troubleshooting.`
+  },
+  {
+    question: `Are there any discounts for bulk bookings?`,
+    answer: `Yes! Some venues offer special discounts for bulk bookings. Check the venue details for available offers or reach out to our support team for more information.`
   }
 ];

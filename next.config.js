@@ -19,6 +19,11 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'venues-images.s3.ap-south-1.amazonaws.com',
+        port: ''
+      },
+      {
+        protocol: 'https',
         hostname: 'media.hudle.in',
         port: ''
       }

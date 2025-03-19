@@ -4,20 +4,20 @@ import { siteDetails } from './siteDetails';
 export const testimonials: ITestimonial[] = [
   {
     name: 'John Smith',
-    role: 'CEO at Company',
-    message: `${siteDetails.siteName}'s AI-driven insights have transformed how we approach financial planning for our clients. It's an invaluable resource in the modern financial landscape.`,
+    role: 'Football Player',
+    message: `${siteDetails.siteName} makes booking football slots so easy! The real-time availability feature ensures I always find a slot that fits my schedule. Highly recommend it to all football lovers!`,
     avatar: '/images/testimonial-1.webp'
   },
   {
     name: 'Jane Doe',
-    role: 'CTO at Startup',
-    message: `As a CTO, I'm impressed by ${siteDetails.siteName}'s robust security measures and seamless integrations. It's rare to find an app that balances user-friendliness with such advanced technology.`,
+    role: 'Regular User',
+    message: `I love how ${siteDetails.siteName} provides detailed venue descriptions and live slot availability. Finding the perfect time and place to play has never been this easy!`,
     avatar: '/images/testimonial-2.webp'
   },
   {
     name: 'Emily Johnson',
-    role: 'Product Manager',
-    message: `${siteDetails.siteName} is revolutionizing personal finance management. Its intuitive design and powerful features make it an indispensable tool for anyone serious about financial growth.`,
+    role: 'Football Enthusiast',
+    message: `${siteDetails.siteName} is the ultimate platform for football lovers. The easy booking process and secure payments make the whole experience smooth and hassle-free.`,
     avatar: '/images/testimonial-3.webp'
   }
 ];
