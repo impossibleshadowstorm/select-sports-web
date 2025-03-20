@@ -66,7 +66,7 @@ export async function POST(
     return NextResponse.json(
       {
         message: 'Login successful',
-        data: { token, userId: user.id }
+        data: { token, userId: user.id, name: user.name, email: user.email }
       },
       { status: 200 }
     );
