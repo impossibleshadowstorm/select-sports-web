@@ -1,4 +1,3 @@
-import { Wallet } from 'lucide-react';
 import prisma from './prisma-client';
 
 interface RefundResponse {

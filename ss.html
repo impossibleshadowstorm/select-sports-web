@@ -1,0 +1,253 @@
+<style>
+  /* 	 on Sale itme style*/
+  .woocommerce ul.products li.product span.onsale {
+    border-radius: 5px 5px 0px 0px !important;
+    background-color: #eabbb2 !important;
+    color: #ae3e26 !important;
+    font-weight: 700 !important;
+    padding: 3px 0px !important;
+    width: 100% !important;
+    margin: -10px;
+  }
+
+  .wpcbm-badge-2739 {
+    color: #ffffff;
+    background-color: #eabbb2;
+    box-shadow: 4px 4px rgba(0, 0, 0, 0.1);
+    width: 320px !important;
+    margin: -10px;
+    border-radius: 5px 0px 0px 0px;
+  }
+  
+  .wpcbm-badge-style-10 {
+    padding: 0px !important;
+  }
+
+  .wpcbm-badge-inner {
+    color: #ae3e26 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Products of Home Page */
+  @media (max-width: 768px) {
+    .wpcbm-wrapper {
+      max-width: 100%;
+      background-color: #e8e8e8 !important;
+      height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .woocommerce ul.products li.product a img {
+      margin: 0 !important;
+      width: 55%;
+      height: 180px;
+    }
+    .wpcbm-badge-2739 {
+      width: 305px !important;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .wpcbm-wrapper {
+      max-width: 100%;
+      background-color: #e8e8e8 !important;
+      display: flex !important;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      height: 300px !important;
+    }
+
+    .woocommerce .products li.product .woo-product-image img {
+      border-radius: 0px;
+      height: 200px !important;
+      width: 200px !important;
+    }
+
+    .woocommerce ul.products.columns-3 {
+      margin-left: 170px !important;
+      margin-right: 170px !important;
+    }
+
+    .yith-wcwl-feedback-messages-container {
+      visibility: hidden !important;
+      display: none !important;
+    }
+
+    .elementskit-profile-image-card {
+      border-radius: 0px 10px 10px 0px;
+    }
+    .contact-box {
+      position: absolute;
+      top: 40px;
+      left: 0;
+      width: 400px;
+      height: auto;
+      background: white;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding: 20px;
+      box-sizing: border-box;
+      font-size: 16px;
+      color: black;
+      text-align: center;
+      display: none;
+      z-index: 9999999;
+    }
+
+    .contact-section {
+      background-color: #f7dcd7;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+    }
+
+    .contact-section p {
+      margin: 0;
+      margin-bottom: 10px;
+    }
+
+    .email-box {
+      background-color: #f0f0f0;
+      padding: 15px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .email-box i {
+      font-size: 22px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .options-box {
+      padding: 8px;
+      margin-top: 13px;
+      background-color: #f7dcd7;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s ease-in-out;
+    }
+
+    .options-box:hover {
+      background-color: #e0bdb6;
+    }
+    .options-box p {
+      text-align: center;
+      margin: 0;
+    }
+    /* Remove underline from the anchor tag */
+    .options-box a {
+      text-decoration: none;
+      color: inherit;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .attachment-woocommerce_thumbnail.size-woocommerce_thumbnail {
+      height: 70px !important;
+      width: auto !important;
+    }
+    /* 	dlete icon cart */
+    .product-remove a.remove:hover {
+      background: transparent !important;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const headerContact = document.querySelector(".header-contact");
+    const supportText = document.querySelector(".header-contact ul li a"); // Assuming the support text is inside an <a> tag
+    const contactBox = document.createElement("div");
+
+    contactBox.classList.add("contact-box");
+    contactBox.innerHTML = `
+        <div class="contact-section">
+            <p>Monday - Saturday (9 AM - 9 PM)</p>
+            <h3><strong>+91 9911251555</strong></h3>
+        </div>
+
+        <div class="email-box">
+            <i class="fas fa-envelope"></i>
+            <strong>pawingclaw@gmail.com</strong>
+        </div>
+
+       <a href="https://washnest.in/faq/"> <div class="options-box">
+            <p>FAQ's</p>
+        </div></a>
+    `;
+
+    // Ensure headerContact has a relative position
+    headerContact.style.position = "relative";
+    headerContact.appendChild(contactBox);
+
+    let hideTimeout;
+
+    function showContactBox() {
+      clearTimeout(hideTimeout);
+      contactBox.style.display = "block";
+    }
+
+    function hideContactBox() {
+      hideTimeout = setTimeout(() => {
+        if (!contactBox.matches(":hover") && !supportText.matches(":hover")) {
+          contactBox.style.display = "none";
+        }
+      }, 200);
+    }
+
+    // Show when hovering over support text
+    supportText.addEventListener("mouseenter", showContactBox);
+
+    // Keep visible when hovering over contactBox
+    contactBox.addEventListener("mouseenter", showContactBox);
+
+    // Hide when leaving both supportText and contactBox
+    supportText.addEventListener("mouseleave", hideContactBox);
+    contactBox.addEventListener("mouseleave", hideContactBox);
+
+    const searchInput = document.querySelector(".header-search-input");
+    const text = "Search products...";
+    let index = 0;
+
+    function typePlaceholder() {
+      if (index <= text.length) {
+        searchInput.setAttribute("placeholder", text.substring(0, index) + "|");
+        index++;
+        setTimeout(typePlaceholder, 150); // Adjust speed here
+      } else {
+        setTimeout(() => {
+          index = 0;
+          typePlaceholder();
+        }, 2000); // Restart after delay
+      }
+    }
+
+    typePlaceholder(); // Start typing effect
+  });
+</script>
+
+<!-- Include FontAwesome for email icon -->
+<script
+  src="https://kit.fontawesome.com/a076d05399.js"
+  crossorigin="anonymous"
+></script>

@@ -1,7 +1,5 @@
 import { authenticate } from '@/middlewares/auth';
 import { NextResponse } from 'next/server';
-import { Address, AvailableStates } from '@prisma/client';
-import { validateRequiredFields } from '@/lib/utils/validator';
 import prisma from '@/lib/utils/prisma-client';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 

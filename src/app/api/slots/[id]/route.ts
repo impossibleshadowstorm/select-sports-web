@@ -398,7 +398,14 @@ export async function PATCH(req: AuthenticatedRequest) {
 
       // Fetch Transaction related to this booking
       const transaction = await prisma.transaction.findFirst({
-        where: { bookingId: existingBooking.id, status: 'SUCCESS' }
+        where: {
+          status: 'SUCCESS',
+          Booking: {
+            some: {
+              id: existingBooking.id
+            }
+          }
+        }
       });
 
       if (!transaction) {
@@ -456,15 +463,13 @@ export async function PATCH(req: AuthenticatedRequest) {
         });
 
         // Add refunded amount to user's wallet balance
-        await prisma.walletTransaction.create({
-          data: {
-            userId,
-            amount: refundAmount,
-            type: 'CREDIT',
-            status: 'COMPLETED',
-            remarks: 'Refund for cancelled slot'
-          }
-        });
+        // await prisma.walletTransaction.create({
+        //   data: {
+        //     transactionType: 'CREDIT',
+        //     status: 'COMPLETED',
+        //     remarks: 'Refund for cancelled slot'
+        //   }
+        // });
 
         // Update user's wallet balance
         await prisma.wallet.update({
@@ -475,9 +480,7 @@ export async function PATCH(req: AuthenticatedRequest) {
             }
           }
         });
-      } catch (err) {
-        console.error('Error processing refund:', err);
-      }
+      } catch (err) {}
 
       return NextResponse.json(
         {
