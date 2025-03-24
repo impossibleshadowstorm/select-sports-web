@@ -224,6 +224,126 @@ export async function POST(req: AuthenticatedRequest) {
   });
 }
 
+// Commented for test
+
+// export async function PATCH(req: AuthenticatedRequest) {
+//   return await authenticate(req, async () => {
+//     try {
+//       const { id: userId } = req.user as { id: string };
+//       const { pathname } = parse(req.url, true);
+//       const slotId = pathname?.split('/').pop();
+
+//       if (!slotId) {
+//         return NextResponse.json(
+//           { message: 'Slot ID is required in the URL.' },
+//           { status: 400 }
+//         );
+//       }
+
+//       // Fetch slot details along with both teams
+//       const slot = await prisma.slot.findUnique({
+//         where: { id: slotId },
+//         include: { team1: true, team2: true }
+//       });
+
+//       if (!slot) {
+//         return NextResponse.json(
+//           { message: 'Slot not found.' },
+//           { status: 404 }
+//         );
+//       }
+
+//       // Find user's active booking for the slot
+//       const existingBooking = await prisma.booking.findFirst({
+//         where: { userId, slotId, status: 'CONFIRMED' }
+//       });
+
+//       if (!existingBooking) {
+//         return NextResponse.json(
+//           { message: 'No active booking found for this slot.' },
+//           { status: 400 }
+//         );
+//       }
+
+//       // Get current time & slot time
+//       const currentTime = new Date();
+//       const slotTime = new Date(slot.startTime);
+//       const timeDifference =
+//         (slotTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60);
+
+//       if (timeDifference < 6) {
+//         return NextResponse.json(
+//           { message: 'Cancellation is only allowed 6+ hours before the slot.' },
+//           { status: 400 }
+//         );
+//       }
+
+//       // Determine refund amount
+//       let refundPercentage = timeDifference >= 12 ? 100 : 50;
+
+//       // Cancel the booking
+//       await prisma.booking.update({
+//         where: { id: existingBooking.id },
+//         data: { status: 'CANCELLED' }
+//       });
+
+//       // **Identify which team the user is part of and remove them**
+//       let teamToDisconnect = null;
+
+//       if (slot.team1Id) {
+//         const isUserInTeam1 = await prisma.team.findFirst({
+//           where: { id: slot.team1Id, users: { some: { id: userId } } }
+//         });
+//         if (isUserInTeam1) teamToDisconnect = slot.team1Id;
+//       }
+
+//       if (!teamToDisconnect && slot.team2Id) {
+//         const isUserInTeam2 = await prisma.team.findFirst({
+//           where: { id: slot.team2Id, users: { some: { id: userId } } }
+//         });
+//         if (isUserInTeam2) teamToDisconnect = slot.team2Id;
+//       }
+
+//       if (teamToDisconnect) {
+//         await prisma.team.update({
+//           where: { id: teamToDisconnect },
+//           data: { users: { disconnect: { id: userId } } }
+//         });
+//       }
+//       //   * * * * * **  Future Purpose * * * * * ** * //
+//       // For Loging the Amount will be refunded to the user due to Slot Full
+//       // const booking = await prisma.refund.create({
+//       //   data: {
+//       //     status: 'REFUNDED',
+//       //     slotId,
+//       //     userId,
+//       //     remarks,
+//       //     isRefundes :'NO'
+//       //   }
+//       // });
+
+//       return NextResponse.json(
+//         {
+//           success: true,
+//           message:
+//             'Booking cancelled successfully. You have been removed from your team.',
+//           refund: `You will receive a ${refundPercentage}% refund.`,
+//           bookingStatus: 'CANCELLED'
+//         },
+//         { status: 200 }
+//       );
+//     } catch (error: any) {
+//       return NextResponse.json(
+//         {
+//           message: 'An error occurred.',
+//           error: error?.message || 'Unknown error'
+//         },
+//         { status: 500 }
+//       );
+//     }
+//   });
+// }
+
 export async function PATCH(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
@@ -238,7 +358,7 @@ export async function PATCH(req: AuthenticatedRequest) {
         );
       }
 
-      // Fetch slot details along with both teams
+      // Fetch slot details along with teams and price
       const slot = await prisma.slot.findUnique({
         where: { id: slotId },
         include: { team1: true, team2: true }
@@ -276,8 +396,21 @@ export async function PATCH(req: AuthenticatedRequest) {
         );
       }
 
+      // Fetch Transaction related to this booking
+      const transaction = await prisma.transaction.findFirst({
+        where: { bookingId: existingBooking.id, status: 'SUCCESS' }
+      });
+
+      if (!transaction) {
+        return NextResponse.json(
+          { message: 'No transaction found for this booking.' },
+          { status: 400 }
+        );
+      }
+
       // Determine refund amount
       let refundPercentage = timeDifference >= 12 ? 100 : 50;
+      const refundAmount = (transaction.amount * refundPercentage) / 100;
 
       // Cancel the booking
       await prisma.booking.update({
@@ -285,7 +418,13 @@ export async function PATCH(req: AuthenticatedRequest) {
         data: { status: 'CANCELLED' }
       });
 
-      // **Identify which team the user is part of and remove them**
+      // Update transaction status to REFUND_PROCESSING
+      await prisma.transaction.update({
+        where: { id: transaction.id },
+        data: { status: 'REFUND_PROCESSING' }
+      });
+
+      // Remove user from team
       let teamToDisconnect = null;
 
       if (slot.team1Id) {
@@ -308,24 +447,43 @@ export async function PATCH(req: AuthenticatedRequest) {
           data: { users: { disconnect: { id: userId } } }
         });
       }
-      //   * * * * * **  Future Purpose * * * * * ** * //
-      // For Loging the Amount will be refunded to the user due to Slot Full
-      // const booking = await prisma.refund.create({
-      //   data: {
-      //     status: 'REFUNDED',
-      //     slotId,
-      //     userId,
-      //     remarks,
-      //     isRefundes :'NO'
-      //   }
-      // });
+
+      try {
+        // Update transaction status to REFUND_SUCCESSFUL
+        await prisma.transaction.update({
+          where: { id: transaction.id },
+          data: { status: 'REFUND_SUCCESSFUL' }
+        });
+
+        // Add refunded amount to user's wallet balance
+        await prisma.walletTransaction.create({
+          data: {
+            userId,
+            amount: refundAmount,
+            type: 'CREDIT',
+            status: 'COMPLETED',
+            remarks: 'Refund for cancelled slot'
+          }
+        });
+
+        // Update user's wallet balance
+        await prisma.wallet.update({
+          where: { userId },
+          data: {
+            balance: {
+              increment: refundAmount
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Error processing refund:', err);
+      }
 
       return NextResponse.json(
         {
           success: true,
-          message:
-            'Booking cancelled successfully. You have been removed from your team.',
-          refund: `You will receive a ${refundPercentage}% refund.`,
+          message: 'Booking cancelled successfully. Refund is being processed.',
+          refund: `You will receive a ${refundPercentage}% refund in 5 minutes.`,
           bookingStatus: 'CANCELLED'
         },
         { status: 200 }
@@ -355,9 +513,10 @@ export async function PATCH(req: AuthenticatedRequest) {
 // Step 8: Save the booking in the database as CONFIRMED.
 // Step 9: Add the user to the selected team.
 // Step 10: Return a success response with booking details.
+
 // 2. Cancel a Booking (PATCH Request)
 // Step 1: Authenticate the user.
-// Step 2: Extract slotId from the URL.
+// Step 2: Extract bookingId from the URL.
 // Step 3: Fetch the slot and check if it exists.
 // Step 4: Check if the user has an active booking for this slot. If not, reject the request.
 // Step 5: Check if the current time is at least 6 hours before the slot starts. If not, reject the request.
@@ -366,4 +525,6 @@ export async function PATCH(req: AuthenticatedRequest) {
 // If canceled between 6-12 hours before, 50% refund.
 // Step 7: Update the booking status to CANCELLED.
 // Step 8: Remove the user from their assigned team.
-// Step 9: Return a success response with cancellation details and refund information.
+// Step 9: Change the Transaction Status to REFUND_SUCCESSFUL
+// Step 10: Add new Transaction data in Transaction tble by adding in Wallet Transaction by adding refunded amount to wallet of user
+// Step 10: Return a success response with cancellation details and refund information.
