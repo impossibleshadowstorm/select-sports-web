@@ -1,5 +1,5 @@
 import prisma from '@/lib/utils/prisma-client';
-
+import { refundToWallet } from '@/lib/utils/refund-to-wallet';
 export async function bookSlot(
   userId: string,
   slotId: string,
@@ -69,10 +69,11 @@ export async function bookSlot(
 
     // Check if slot is full
     if (totalPlayers >= slot.maxPlayer) {
+      refundToWallet(userId, slot.discountedPrice);
+
       return {
         success: false,
-        message:
-          'Slot is full. Your pay amount will be refunded in App Wallet in 2-3 working days.',
+        message: `Slot is full. Your pay amount (${slot.discountedPrice}) will be refunded in App Wallet in 12-24 working hours.`,
         bookingStatus: 'CANCELLED',
         status: 400
       };
