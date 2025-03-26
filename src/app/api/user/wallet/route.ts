@@ -1,7 +1,5 @@
 import { authenticate } from '@/middlewares/auth';
 import { NextResponse } from 'next/server';
-import { Address, AvailableStates } from '@prisma/client';
-import { validateRequiredFields } from '@/lib/utils/validator';
 import prisma from '@/lib/utils/prisma-client';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 
@@ -10,28 +8,25 @@ export async function GET(req: AuthenticatedRequest) {
     try {
       const { id } = req.user as { id: string };
 
-      const userWalletDetails = await prisma.wallet.findUnique({
-        where: {
-          userId: id
-        },
+      const walletData = await prisma.wallet.findUnique({
+        where: { userId: id }
+      });
+
+      const transactions = await prisma.transaction.findMany({
+        where: { userId: id },
         include: {
-          transactions: {
-            include: {
-              transaction: {
-                include: {
-                  razorpay: true,
-                  walletTxn: true
-                }
-              }
-            }
-          }
+          razorpay: true,
+          walletTxn: true
         }
       });
 
       return NextResponse.json(
         {
           message: 'Wallet Data Fetched successfully.',
-          data: { userWalletDetails }
+          data: {
+            wallet: walletData,
+            transactions: transactions
+          }
         },
         { status: 200 }
       );
