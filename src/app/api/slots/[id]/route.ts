@@ -39,6 +39,11 @@ export async function GET(req: NextRequest) {
         },
         sport: true,
         bookings: {
+          where: {
+            status: {
+              notIn: ['CANCELLED']
+            }
+          },
           include: {
             user: true
           }
