@@ -182,11 +182,21 @@ model Wallet {
 }
 
 model Host {
-  id         String @id @default(uuid()) @db.Uuid
-  occupation String
-  userId     String @unique @db.Uuid
-  user       User   @relation(fields: [userId], references: [id])
-  slots      Slot[]
+  id                String          @id @default(uuid()) @db.Uuid
+  occupation        Occupation      @default(EMPLOYED_FULL_TIME)
+  userId            String          @db.Uuid @unique
+  user              User            @relation(fields: [userId], references: [id])
+  slots             Slot[]
+  playFootball      YesNo           @default(NO)
+  car               YesNo           @default(NO)
+  bike              YesNo           @default(NO)
+  usedThisApp       YesNo           @default(NO)
+  experienceInOrgCS YesNo           @default(NO)
+  commitHours CommitHours @default(LESS_THAN_5_HOURS)
+  preferredSchedule Schedule[]
+  status            HostStatus      @default(PENDING)
+  keyHighlights     String?
+  currentLocation   AvailableStates @default(DELHI_NCR)
 }
 
 model Team {
@@ -199,6 +209,42 @@ model Team {
   slotsAsTeam1 Slot[]     @relation("team1Relation")
   slotsAsTeam2 Slot[]     @relation("team2Relation")
   users        User[]     @relation("TeamUsers")
+}
+
+
+enum YesNo {
+  NO
+  YES
+}
+
+enum CommitHours {
+  LESS_THAN_5_HOURS
+  FIVE_TO_TEN_HOURS
+  MORE_THAN_TEN_HOURS
+}
+enum Occupation {
+  EMPLOYED_FULL_TIME
+  EMPLOYED_PART_TIME
+  UNEMPLOYED
+  STUDENT
+  ATHELETE
+  SPORTS_MAN
+}
+
+enum Schedule {
+  WEEKDAYS_MORNING
+  WEEKDAYS_EVENING
+  WEEKEND_MORNING
+  WEEKEND_EVENING
+  WEEKDAYS_AFTERNOON
+  WEEKEND_AFTERNOON
+}
+
+enum HostStatus {
+  PENDING
+  APRROVED
+  REJECTED
+  REVOKED
 }
 
 enum Role {
