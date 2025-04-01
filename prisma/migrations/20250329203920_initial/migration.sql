@@ -1,4 +1,19 @@
 -- CreateEnum
+CREATE TYPE "YesNo" AS ENUM ('NO', 'YES');
+
+-- CreateEnum
+CREATE TYPE "CommitHours" AS ENUM ('LESS_THAN_5_HOURS', 'FIVE_TO_TEN_HOURS', 'MORE_THAN_TEN_HOURS');
+
+-- CreateEnum
+CREATE TYPE "Occupation" AS ENUM ('EMPLOYED_FULL_TIME', 'EMPLOYED_PART_TIME', 'UNEMPLOYED', 'STUDENT', 'ATHELETE', 'SPORTS_MAN');
+
+-- CreateEnum
+CREATE TYPE "Schedule" AS ENUM ('WEEKDAYS_MORNING', 'WEEKDAYS_EVENING', 'WEEKEND_MORNING', 'WEEKEND_EVENING', 'WEEKDAYS_AFTERNOON', 'WEEKEND_AFTERNOON');
+
+-- CreateEnum
+CREATE TYPE "HostStatus" AS ENUM ('PENDING', 'APRROVED', 'REJECTED', 'REVOKED');
+
+-- CreateEnum
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');
 
 -- CreateEnum
@@ -213,8 +228,18 @@ CREATE TABLE "Wallet" (
 -- CreateTable
 CREATE TABLE "Host" (
     "id" UUID NOT NULL,
-    "occupation" TEXT NOT NULL,
+    "occupation" "Occupation" NOT NULL DEFAULT 'EMPLOYED_FULL_TIME',
     "userId" UUID NOT NULL,
+    "playFootball" "YesNo" NOT NULL DEFAULT 'NO',
+    "car" "YesNo" NOT NULL DEFAULT 'NO',
+    "bike" "YesNo" NOT NULL DEFAULT 'NO',
+    "usedThisApp" "YesNo" NOT NULL DEFAULT 'NO',
+    "experienceInOrgCS" "YesNo" NOT NULL DEFAULT 'NO',
+    "commitHours" "CommitHours" NOT NULL DEFAULT 'LESS_THAN_5_HOURS',
+    "preferredSchedule" "Schedule"[],
+    "status" "HostStatus" NOT NULL DEFAULT 'PENDING',
+    "keyHighlights" TEXT,
+    "currentLocation" "AvailableStates" NOT NULL DEFAULT 'DELHI_NCR',
 
     CONSTRAINT "Host_pkey" PRIMARY KEY ("id")
 );
