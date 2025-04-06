@@ -1,3 +1,4 @@
+import { Html } from 'next/document';
 import nodemailer, { Transporter } from 'nodemailer';
 
 interface MailOptions {
@@ -23,7 +24,7 @@ export const sendMail = async ({
     from: process.env.EMAIL_USER as string, // Sender's email address
     to,
     subject,
-    text
+    html: text
   };
 
   try {

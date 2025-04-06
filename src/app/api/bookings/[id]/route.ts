@@ -203,6 +203,7 @@ import { NextResponse } from 'next/server';
 import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { refundToWallet } from '@/lib/utils/refund-to-wallet';
+import { sendMail } from '@/lib/utils/nodemailer-setup';
 
 export async function GET(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
@@ -402,6 +403,83 @@ export async function PATCH(req: AuthenticatedRequest) {
       });
 
       const cancelResponse = await refundToWallet(userId, refundAmount);
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+      const mailRes = await sendMail({
+        to: user?.email as string,
+        subject: `Cancellation & Refund Confirmation for Slot #${bookingId.substring(0, 7)}`,
+        text: `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Booking Cancelled</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f9; padding: 40px 0;">
+          <tr>
+            <td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <tr>
+                  <td style="text-align: center; padding-bottom: 30px;">
+                    <h2 style="color: #d9534f;">Booking Cancelled</h2>
+                    <p style="color: #333333; font-size: 16px;">Your booking with <strong>SelectSportss.com</strong> has been successfully cancelled.</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <p style="font-size: 15px; color: #333333;"><strong>Dear ${user?.name},</strong></p>
+                    <p style="font-size: 15px; color: #555555; line-height: 1.6;">
+                      We’re writing to confirm that your booking for <strong>slot #${bookingId.substring(0, 7)}</strong> has been cancelled as per your request.
+                    </p>
+      
+                    <h3 style="color: #333333; margin-top: 30px;">Cancellation Summary:</h3>
+                    <ul style="font-size: 15px; color: #555555; line-height: 1.6;">
+                      <li><strong>Booking ID:</strong> ${booking.id}</li>
+                      <li><strong>Status:</strong> Cancelled</li>
+                    </ul>
+      
+                    <h3 style="color: #333333; margin-top: 30px;">Refund Details:</h3>
+                    <ul style="font-size: 15px; color: #555555; line-height: 1.6;">
+                      <li><strong>Amount Refunded:</strong> ₹${refundAmount}</li>
+                      <li><strong>Transaction ID:</strong> ${booking.transactionId?.substring(0, 7)}</li>
+                      <li><strong>Refund Status:</strong> Successful</li>
+                      <li><strong>Refund Method:</strong> Wallet</li>
+                    </ul>
+      
+                    <p style="font-size: 15px; color: #555555; margin-top: 30px;">
+                      The refunded amount has been successfully credited back to your wallet. You can use it for future bookings at your convenience.
+                    </p>
+      
+                    <p style="font-size: 15px; color: #555555;">
+                      If you have any questions or require assistance, feel free to reach out to our support team.
+                    </p>
+      
+                    <p style="font-size: 15px; color: #555555;">
+                      Best regards,<br/>
+                      <strong>The SelectSportss.com Team</strong>
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="text-align: center; padding-top: 40px; font-size: 13px; color: #999999;">
+                    © ${new Date().getFullYear()} SelectSportss.com — All Rights Reserved.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+      `
+      });
+
+      console.log(mailRes);
+
       return NextResponse.json(cancelResponse, {
         status: cancelResponse.status
       });
