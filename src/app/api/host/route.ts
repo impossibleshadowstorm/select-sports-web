@@ -111,7 +111,6 @@ export async function POST(req: AuthenticatedRequest) {
         { status: 201 }
       );
     } catch (error: any) {
-      console.log(error);
       return NextResponse.json(
         {
           message: 'Failed to register host',

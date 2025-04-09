@@ -81,17 +81,6 @@ export async function PATCH(req: NextRequest): Promise<NextResponseType> {
         );
       }
 
-      console.log(
-        startTime,
-        endTime,
-        slotType,
-        status,
-        team1,
-        team2,
-        hostId,
-        ':Data in body'
-      );
-
       // Validate `slotType`
       if (slotType && !Object.values(SlotType).includes(slotType)) {
         return NextResponse.json(

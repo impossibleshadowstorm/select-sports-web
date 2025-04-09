@@ -126,7 +126,7 @@ export async function bookSlot(
       where: { id: userId }
     });
 
-    const mailres = await sendMail({
+    await sendMail({
       to: user?.email as string,
       subject: `Booking Confirmation of slot #${slotId.substring(0, 7)}`,
       text: `<!DOCTYPE html>
@@ -191,8 +191,6 @@ export async function bookSlot(
 </html>
 `
     });
-
-    console.log(mailres);
 
     return {
       success: true,

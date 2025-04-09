@@ -407,7 +407,7 @@ export async function PATCH(req: AuthenticatedRequest) {
       const user = await prisma.user.findUnique({
         where: { id: userId }
       });
-      const mailRes = await sendMail({
+      await sendMail({
         to: user?.email as string,
         subject: `Cancellation & Refund Confirmation for Slot #${bookingId.substring(0, 7)}`,
         text: `
@@ -478,8 +478,6 @@ export async function PATCH(req: AuthenticatedRequest) {
       `
       });
 
-      console.log(mailRes);
-
       return NextResponse.json(cancelResponse, {
         status: cancelResponse.status
       });
@@ -535,7 +533,6 @@ export async function PATCH(req: AuthenticatedRequest) {
         { status: 200 }
       );
     } catch (error: any) {
-      // console.log(error);
       return NextResponse.json(
         {
           message: 'An error occurred.',
