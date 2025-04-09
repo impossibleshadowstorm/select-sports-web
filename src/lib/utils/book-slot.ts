@@ -1,5 +1,7 @@
 import prisma from '@/lib/utils/prisma-client';
 import { refundToWallet } from '@/lib/utils/refund-to-wallet';
+import { sendMail } from '@/lib/utils/nodemailer-setup';
+
 export async function bookSlot(
   userId: string,
   slotId: string,
@@ -119,6 +121,78 @@ export async function bookSlot(
       where: { id: userId },
       data: { bookings: { connect: { id: booking.id } } }
     });
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    const mailres = await sendMail({
+      to: user?.email as string,
+      subject: `Booking Confirmation of slot #${slotId.substring(0, 7)}`,
+      text: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Booking Confirmation</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f6f9fc; margin: 0; padding: 0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f6f9fc; padding: 30px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="text-align: center; padding-bottom: 30px;">
+              <h2 style="color: #333333;">Booking Confirmed</h2>
+              <p style="color: #555555; font-size: 16px;">Thank you for booking with <strong>SelectSportss.com</strong>.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p style="color: #333333; font-size: 16px;"><strong>Dear ${user?.name},</strong></p>
+              <p style="color: #555555; font-size: 15px; line-height: 1.6;">
+                We are pleased to confirm your booking for <strong>slot #${slotId.substring(0, 7)}</strong>. Our team is excited to serve you and ensure a smooth experience.
+              </p>
+
+              <h3 style="color: #333333; margin-top: 30px;">Booking Details:</h3>
+              <ul style="color: #555555; font-size: 15px; line-height: 1.6;">
+                <li><strong>Booking ID:</strong> ${booking.id.substring(0, 7)}</li>
+                <li><strong>Assigned Team:</strong> {${assignedTeamId === slot.team1Id ? 'team1' : 'team2'}}</li>
+                <li><strong>Status:</strong> Confirmed</li>
+              </ul>
+
+              <h3 style="color: #333333; margin-top: 30px;">Your Contact Details:</h3>
+              <ul style="color: #555555; font-size: 15px; line-height: 1.6;">
+                <li><strong>Name:</strong> ${user?.name}</li>
+                <li><strong>Email:</strong> ${user?.email}</li>
+                <li><strong>Phone:</strong> ${user?.phone}</li>
+              </ul>
+
+              <p style="color: #555555; font-size: 15px; margin-top: 30px;">
+                If you have any questions or need to make changes to your booking, feel free to contact us anytime.
+              </p>
+
+              <p style="color: #555555; font-size: 15px;">
+                Best regards,<br/>
+                <strong>The SelectSportss.com Team</strong>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: center; padding-top: 40px; font-size: 13px; color: #999999;">
+              © ${new Date().getFullYear()} SelectSportss.com — All Rights Reserved.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`
+    });
+
+    console.log(mailres);
 
     return {
       success: true,
