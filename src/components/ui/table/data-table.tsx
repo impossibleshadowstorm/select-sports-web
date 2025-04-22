@@ -30,11 +30,13 @@ import {
 } from '@tanstack/react-table';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { parseAsInteger, useQueryState } from 'nuqs';
-
+import { useRouter } from 'next/navigation';
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   totalItems: number;
+  pageIndex?: number;
+  pageSize?: number;
   pageSizeOptions?: number[];
 }
 
@@ -42,13 +44,16 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   totalItems,
+  pageIndex,
+  pageSize,
   pageSizeOptions = [10, 20, 30, 40, 50]
 }: DataTableProps<TData, TValue>) {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useQueryState(
     'page',
     parseAsInteger.withOptions({ shallow: false }).withDefault(1)
   );
-  const [pageSize, setPageSize] = useQueryState(
+  const [pageSizeFromUrl, setPageSizeFromUrl] = useQueryState(
     'limit',
     parseAsInteger
       .withOptions({ shallow: false, history: 'push' })
@@ -56,11 +61,11 @@ export function DataTable<TData, TValue>({
   );
 
   const paginationState = {
-    pageIndex: currentPage - 1, // zero-based index for React Table
-    pageSize: pageSize
+    pageIndex: pageIndex ?? currentPage - 1, // zero-based index for React Table
+    pageSize: pageSize ?? pageSizeFromUrl
   };
 
-  const pageCount = Math.ceil(totalItems / pageSize);
+  const pageCount = Math.ceil(totalItems / paginationState.pageSize);
 
   const handlePaginationChange = (
     updaterOrValue:
@@ -73,7 +78,13 @@ export function DataTable<TData, TValue>({
         : updaterOrValue;
 
     setCurrentPage(pagination.pageIndex + 1); // converting zero-based index to one-based
-    setPageSize(pagination.pageSize);
+    setPageSizeFromUrl(pagination.pageSize);
+
+    // Update URL to trigger SSR reload
+    const newPage = pagination.pageIndex + 1;
+    const newLimit = pagination.pageSize;
+
+    router.push(`?page=${newPage}&limit=${newLimit}`);
   };
 
   const table = useReactTable({

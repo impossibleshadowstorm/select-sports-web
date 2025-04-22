@@ -77,6 +77,7 @@ export async function PATCH(req: AuthenticatedRequest) {
       const body = await req.json(); // Parse request body
       const { pathname } = parse(req.url, true);
       const hostId = pathname?.split('/').pop();
+
       // Required fields
       const requiredFields = ['currentStatus', 'changeStatus'];
 
@@ -100,17 +101,20 @@ export async function PATCH(req: AuthenticatedRequest) {
       }
 
       if (existingHost.status !== body.currentStatus) {
+        console.error(
+          'Current Status mismatch:',
+          existingHost.status,
+          body.currentStatus
+        );
         return NextResponse.json(
           { message: "Current Status of host doesn't Match" },
           { status: 400 }
         );
       }
-
       const updateHost = await prisma.host.update({
         where: { id: hostId },
         data: { status: body.changeStatus }
       });
-
       return NextResponse.json(
         {
           message: `Host status changed successfully to ${body.changeStatus}`,

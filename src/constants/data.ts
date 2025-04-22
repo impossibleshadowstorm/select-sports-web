@@ -44,6 +44,14 @@ export const navItems: NavItem[] = [
     shortcut: ['p', 'p'],
     isActive: false,
     items: [] // No child items
+  },
+  {
+    title: 'Hosts',
+    url: '/dashboard/hosts',
+    icon: 'football_ground',
+    shortcut: ['p', 'p'],
+    isActive: false,
+    items: [] // No child items
   }
   // {
   //   title: 'Account',

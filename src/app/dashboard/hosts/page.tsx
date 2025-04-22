@@ -3,8 +3,8 @@ import { buttonVariants } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
-import SlotListingPage from '@/features/slots/components/slot-listing';
-import SlotTableAction from '@/features/slots/components/slots-tables/slot-table-action';
+import HostListingPage from '@/features/hosts/components/hosts-listing'; // Create this component for host listing
+import HostTableAction from '@/features/hosts/components/hosts-tables/host-table-action'; // Actions for approve/reject
 import { searchParamsCache, serialize } from '@/lib/searchparams';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
@@ -13,7 +13,7 @@ import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 
 export const metadata = {
-  title: 'Dashboard: Slots'
+  title: 'Dashboard: Hosts'
 };
 
 type pageProps = {
@@ -32,21 +32,25 @@ export default async function Page(props: pageProps) {
     <PageContainer scrollable={false}>
       <div className='flex flex-1 flex-col space-y-4'>
         <div className='flex items-start justify-between'>
-          <Heading title='Slots' description='Manage all available slots' />
-          <Link
-            href='/dashboard/slots/new'
+          <Heading
+            title='Hosts'
+            description='Manage pending, approved, and rejected hosts'
+          />
+          {/* <Link
+            href='/dashboard/hosts/new' // Link to a new page where admins can add new hosts
             className={cn(buttonVariants(), 'text-xs md:text-sm')}
           >
-            <Plus className='mr-2 h-4 w-4' /> Add New
-          </Link>
+            <Plus className='mr-2 h-4 w-4' /> Add New Host
+          </Link> */}
         </div>
         <Separator />
-        <SlotTableAction />
+        <HostTableAction />
         <Suspense
           key={key}
           fallback={<DataTableSkeleton columnCount={5} rowCount={10} />}
         >
-          <SlotListingPage />
+          <HostListingPage />
+          {/* This component will list the hosts */}
         </Suspense>
       </div>
     </PageContainer>
