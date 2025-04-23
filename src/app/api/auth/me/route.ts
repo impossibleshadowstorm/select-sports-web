@@ -2,6 +2,7 @@ import { authenticate } from '@/middlewares/auth';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/utils/prisma-client';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
+import { HostStatus } from '@prisma/client';
 
 // Type definitions
 interface AuthenticatedUser {
@@ -9,6 +10,7 @@ interface AuthenticatedUser {
   name: string;
   email: string;
   role: string;
+  isHost: boolean;
 }
 
 interface ResponseMessage {
@@ -36,7 +38,13 @@ export async function GET(req: AuthenticatedRequest) {
           gender: true,
           skillsRating: true,
           isVerified: true,
-          isActive: true
+          isActive: true,
+          hostProfile: {
+            select: {
+              id: true,
+              status: true
+            }
+          }
         }
       });
 
@@ -51,9 +59,12 @@ export async function GET(req: AuthenticatedRequest) {
       }
 
       // Return the authenticated user's data
+      const isApprovedHost = user.hostProfile
+        ? user?.hostProfile?.status === HostStatus.APRROVED
+        : false;
       return NextResponse.json<ResponseMessage>(
         {
-          data: user,
+          data: { ...user, isHost: isApprovedHost },
           authenticated: true,
           message: 'Authenticated Successfully'
         },

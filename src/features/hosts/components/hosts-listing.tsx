@@ -23,7 +23,7 @@ export default async function HostListingPage({}: HostListingPage) {
   const session = await auth();
   const response = await authorizedGet('/host/', session?.user?.id!); // Fetch hosts instead of slots
   const hosts: HostWithStatus[] = response.data;
-  const filteredHosts = hosts.filter((host) => {
+  const filteredHosts = hosts?.filter((host) => {
     const matchesSearch = search
       ? host.user?.name.toLowerCase().includes(search.toLowerCase()) ||
         host.status.toLowerCase().includes(search.toLowerCase()) ||
@@ -37,7 +37,7 @@ export default async function HostListingPage({}: HostListingPage) {
     <HostTable<HostWithStatus, unknown>
       columns={columns}
       data={filteredHosts}
-      totalItems={hosts.length}
+      totalItems={hosts?.length}
     />
   );
 }

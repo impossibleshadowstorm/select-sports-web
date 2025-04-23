@@ -11,11 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import {
-  authorizedPatch,
-  authorizedGet,
-  CommonResponseType
-} from '@/lib/api-client';
+import { authorizedPatch, authorizedGet } from '@/lib/api-client';
 import { useSession } from 'next-auth/react';
 
 interface Slot {
@@ -78,6 +74,7 @@ export default function AssignHostModal({
     if (isOpen && hostId) {
       fetchSlots();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, hostId, session?.user?.id]);
 
   const toggleSlotSelection = (slotId: string) => {
@@ -91,10 +88,6 @@ export default function AssignHostModal({
   const handleAssign = () => {
     startTransition(async () => {
       try {
-        console.log('Sending to backend:', {
-          hostId,
-          slotIds: selectedSlotIds
-        });
         const res: AssignHostResponse = await authorizedPatch(
           `/admin/slots/assign-host`,
           session?.user?.id!,
@@ -126,7 +119,6 @@ export default function AssignHostModal({
           toast.error(res?.message || 'No assignment attempted');
         }
       } catch (err) {
-        console.log(err);
         toast.error('Error assigning slots');
       }
     });

@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Edit, MoreHorizontal, Trash } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Host } from '@prisma/client';
@@ -17,17 +17,17 @@ import { authorizedPatch } from '@/lib/api-client'; // Assuming authorizedPut fo
 import { useSession } from 'next-auth/react';
 import AssignHostModal from './assign-host-modal'; // 🔁 Make sure the path is correct
 
-interface CellActionProps {
-  data: Host & {
-    user: {
-      name: string;
-      email: string;
-      phone: string;
-    };
-  };
-}
+// interface CellActionProps {
+//   data: Host & {
+//     user: {
+//       name: string;
+//       email: string;
+//       phone: string;
+//     };
+//   };
+// }
 
-export const CellAction: React.FC<CellActionProps> = ({ data }) => {
+export const CellAction: React.FC<any> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();

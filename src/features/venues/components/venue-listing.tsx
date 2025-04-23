@@ -27,9 +27,6 @@ export default async function VenueListingPage({}: VenueListingPage) {
   const filteredVenues = venues.filter((venue) => {
     if (!search) return true;
 
-    const searchLower = search.toLowerCase();
-    const searchNumber = parseFloat(search);
-
     const matchesSearch = venue.name.toLowerCase().includes(search);
     return matchesSearch;
   });

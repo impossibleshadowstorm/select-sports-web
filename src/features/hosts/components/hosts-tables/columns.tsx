@@ -5,12 +5,7 @@ import { Host } from '@prisma/client'; // Replace with Host type
 import { Badge } from '@/components/ui/badge'; // UI component for styling tags
 import { CheckCircle, XCircle } from 'lucide-react'; // Icons for Yes/No fields
 import { ExpandableText } from './expandable-text';
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent
-} from '@/components/ui/accordion';
+
 export type HostWithStatus = Host & {
   status: 'PENDING' | 'APRROVED' | 'REJECTED' | 'REVOKED'; // Add status to the type
   user: {

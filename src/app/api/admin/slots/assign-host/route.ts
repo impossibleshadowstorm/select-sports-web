@@ -31,7 +31,6 @@ export async function PATCH(req: AuthenticatedRequest) {
       // 2. Loop through each slot ID and try to assign individually
       const results: { slotId: string; status: string; message?: string }[] =
         [];
-      console.log(host.status);
       for (const slotId of slotIds) {
         try {
           const slot = await prisma.slot.findUnique({ where: { id: slotId } });

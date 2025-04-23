@@ -101,11 +101,6 @@ export async function PATCH(req: AuthenticatedRequest) {
       }
 
       if (existingHost.status !== body.currentStatus) {
-        console.error(
-          'Current Status mismatch:',
-          existingHost.status,
-          body.currentStatus
-        );
         return NextResponse.json(
           { message: "Current Status of host doesn't Match" },
           { status: 400 }

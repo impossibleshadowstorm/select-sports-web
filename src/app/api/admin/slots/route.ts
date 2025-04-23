@@ -130,7 +130,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     });
 
     // Fetch paginated slots
-    console.time('DB Query');
     const slots = await prisma.slot.findMany({
       skip,
       take: limit,
@@ -156,7 +155,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         startTime: 'desc'
       }
     });
-    console.timeEnd('DB Query');
 
     return NextResponse.json(
       {
