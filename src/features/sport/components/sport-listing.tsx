@@ -24,10 +24,20 @@ export default async function SportListingPage({}: SportListingPage) {
   const response = await get('/sports/');
   const sports: Sport[] = response.data;
 
+  const filteredSports = sports.filter((sport) => {
+    if (!search) return true;
+    const searchLower = search.toLowerCase();
+    const searchNumber = parseFloat(search);
+
+    const matchesSearch =
+      sport.name.toLowerCase().includes(searchLower) ||
+      (!isNaN(searchNumber) && sport.totalPlayer === searchNumber);
+    return matchesSearch;
+  });
   return (
     <SportTable<Sport, unknown>
       columns={columns}
-      data={sports}
+      data={filteredSports}
       totalItems={sports.length}
     />
   );

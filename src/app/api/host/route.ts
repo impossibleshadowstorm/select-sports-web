@@ -17,7 +17,6 @@ export async function GET(req: AuthenticatedRequest) {
           }
         }
       });
-
       if (!hosts) {
         return NextResponse.json({ message: 'No Host Found' }, { status: 404 });
       }

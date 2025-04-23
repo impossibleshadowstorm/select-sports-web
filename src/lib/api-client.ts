@@ -34,6 +34,7 @@ export interface CommonResponseType {
   message: string;
   status: number;
   error?: string;
+  totalCount?: number;
 }
 
 // Helper function to build headers
@@ -154,7 +155,8 @@ export async function authorizedGet(
   return {
     status: response.status,
     message: responseData.message || 'Request successful',
-    data: responseData.data
+    data: responseData.data,
+    ...responseData
   };
 }
 
