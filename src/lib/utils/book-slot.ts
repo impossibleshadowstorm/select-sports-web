@@ -192,7 +192,7 @@ export async function bookSlot(
 `
     });
 
-    console.log(mailres);
+    // console.log(mailres);
 
     return {
       success: true,
