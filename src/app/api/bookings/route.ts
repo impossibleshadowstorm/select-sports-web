@@ -104,6 +104,9 @@ export async function GET(req: AuthenticatedRequest): Promise<NextResponse> {
               }
             }
           }
+        },
+        orderBy: {
+          createdAt: 'desc'
         }
       });
 

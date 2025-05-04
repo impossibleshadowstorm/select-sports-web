@@ -5,6 +5,12 @@ import { Slot } from '@prisma/client';
 
 export type SlotWithBookings = Slot & {
   bookings: { user: { name: string; email: string } }[];
+  sport: {
+    name: string;
+  };
+  venue: {
+    name: string;
+  };
 };
 
 export const columns: ColumnDef<SlotWithBookings>[] = [

@@ -2,7 +2,6 @@ import { authenticate } from '../../../../../../middlewares/auth';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/utils/prisma-client';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
-import { parse } from 'url';
 
 export async function PATCH(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {

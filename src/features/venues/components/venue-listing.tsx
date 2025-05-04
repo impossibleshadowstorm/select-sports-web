@@ -24,10 +24,16 @@ export default async function VenueListingPage({}: VenueListingPage) {
   const response = await get('/venues/');
   const venues: Venue[] = response.data;
 
+  const filteredVenues = venues.filter((venue) => {
+    if (!search) return true;
+
+    const matchesSearch = venue.name.toLowerCase().includes(search);
+    return matchesSearch;
+  });
   return (
     <VenueTable<Venue, unknown>
       columns={columns}
-      data={venues}
+      data={filteredVenues}
       totalItems={venues.length}
     />
   );

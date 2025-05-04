@@ -1,6 +1,6 @@
 import prisma from '@/lib/utils/prisma-client';
 import { authenticateAdmin } from '../../../../middlewares/auth';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { validateRequiredFields } from '@/lib/utils/validator';
 import { SlotStatus } from '@prisma/client';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
@@ -22,46 +22,201 @@ interface SlotRequestBody {
   team2: TeamData;
 }
 
-export async function GET(req: AuthenticatedRequest) {
-  return await authenticateAdmin(req, async () => {
-    try {
-      const slots = await prisma.slot.findMany({
-        include: {
-          sport: true,
-          venue: {
-            include: {
-              address: true
-            }
-          },
-          bookings: {
-            include: {
-              user: true
-            }
+// export async function GET(req: NextRequest): Promise<NextResponse> {
+//   try {
+//     const currentDateTime = new Date();
+
+//     const { searchParams } = new URL(req.url);
+
+//     const page = parseInt(searchParams.get('page') || '1');
+//     const limit = parseInt(searchParams.get('limit') || '10');
+//     const skip = (page - 1) * limit;
+
+//     // Total count (without pagination)
+//     const totalCount = await prisma.slot.count({
+//       where: {
+//         status: {
+//           in: ['AVAILABLE', 'BOOKED']
+//         },
+//         OR: [
+//           {
+//             startTime: {
+//               gt: currentDateTime
+//             }
+//           },
+//           {
+//             endTime: {
+//               gt: currentDateTime
+//             }
+//           }
+//         ]
+//       }
+//     });
+
+//     const slots = await prisma.slot.findMany({
+//       skip,
+//       take: limit,
+//       include: {
+//         sport: true,
+//         venue: {
+//           include: {
+//             address: true
+//           }
+//         },
+//         bookings: {
+//           where: {
+//             status: 'CONFIRMED'
+//           }
+//         }
+//       },
+//       where: {
+//         status: {
+//           in: ['AVAILABLE', 'BOOKED']
+//         },
+//         OR: [
+//           {
+//             startTime: {
+//               gt: currentDateTime
+//             }
+//           },
+//           {
+//             endTime: {
+//               gt: currentDateTime
+//             }
+//           }
+//         ]
+//       },
+//       orderBy: {
+//         startTime: 'desc'
+//       }
+//     });
+
+//     return NextResponse.json(
+//       {
+//         message: 'Slots fetched successfully.',
+//         data: slots,
+//         totalCount,
+//         currentPage: page,
+//         totalPages: Math.ceil(totalCount / limit)
+//       },
+//       { status: 200 }
+//     );
+//   } catch (error: any) {
+//     return NextResponse.json(
+//       {
+//         message: 'Failed to fetch slots.',
+//         error: `Error: ${error.message}`
+//       },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  try {
+    const { searchParams } = new URL(req.url);
+
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
+
+    // Count all slots (no filter except AVAILABLE/BOOKED)
+    const totalCount = await prisma.slot.count({
+      where: {
+        status: {
+          in: ['AVAILABLE', 'BOOKED']
+        }
+      }
+    });
+
+    // Fetch paginated slots
+    const slots = await prisma.slot.findMany({
+      skip,
+      take: limit,
+      include: {
+        sport: true,
+        venue: {
+          include: {
+            address: true
           }
         },
-        orderBy: {
-          startTime: 'desc'
+        bookings: {
+          where: {
+            status: 'CONFIRMED'
+          }
         }
-      });
+      },
+      where: {
+        status: {
+          in: ['AVAILABLE', 'BOOKED']
+        }
+      },
+      orderBy: {
+        startTime: 'desc'
+      }
+    });
 
-      return NextResponse.json(
-        {
-          message: 'Slots fetched successfully.',
-          data: slots
-        },
-        { status: 200 }
-      );
-    } catch (error: any) {
-      return NextResponse.json(
-        {
-          message: 'Failed to fetch slots.',
-          error: `Error: ${error.message}`
-        },
-        { status: 500 }
-      );
-    }
-  });
+    return NextResponse.json(
+      {
+        message: 'Slots fetched successfully.',
+        data: slots,
+        totalCount,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit)
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        message: 'Failed to fetch slots.',
+        error: `Error: ${error.message}`
+      },
+      { status: 500 }
+    );
+  }
 }
+
+// export async function GET(req: AuthenticatedRequest) {
+//   return await authenticateAdmin(req, async () => {
+//     try {
+//       const slots = await prisma.slot.findMany({
+//         include: {
+//           sport: true,
+//           venue: {
+//             include: {
+//               address: true
+//             }
+//           },
+//           bookings: {
+//             include: {
+//               user: true
+//             }
+//           }
+//         },
+//         orderBy: {
+//           startTime: 'desc'
+//         }
+//       });
+
+//       return NextResponse.json(
+//         {
+//           message: 'Slots fetched successfully.',
+//           data: slots
+//         },
+//         { status: 200 }
+//       );
+//     } catch (error: any) {
+//       return NextResponse.json(
+//         {
+//           message: 'Failed to fetch slots.',
+//           error: `Error: ${error.message}`
+//         },
+//         { status: 500 }
+//       );
+//     }
+//   });
+// }
 
 // Expected Format: YYYY-MM-DDTHH:mm:ss
 const dateTimeFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;

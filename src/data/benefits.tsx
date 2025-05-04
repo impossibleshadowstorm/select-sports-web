@@ -37,7 +37,7 @@ export const benefits: IBenefit[] = [
         icon: <FiTrendingUp size={26} />
       }
     ],
-    imageSrc: '/images/mockup-prf-1.png'
+    imageSrc: '/images/benefits-mockup-1.png'
   },
   {
     title: 'Venue Details and Descriptions',
@@ -62,7 +62,7 @@ export const benefits: IBenefit[] = [
         icon: <FiPieChart size={26} />
       }
     ],
-    imageSrc: '/images/venues-details-mockup.png'
+    imageSrc: '/images/benefits-mockup-2.png'
   },
   {
     title: 'Enhanced Profile Management',
@@ -87,6 +87,6 @@ export const benefits: IBenefit[] = [
         icon: <FiShield size={26} />
       }
     ],
-    imageSrc: '/images/profile-management-mockup.png'
+    imageSrc: '/images/benefits-mockup-3.png'
   }
 ];

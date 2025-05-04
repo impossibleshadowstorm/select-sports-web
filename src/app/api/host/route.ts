@@ -17,7 +17,6 @@ export async function GET(req: AuthenticatedRequest) {
           }
         }
       });
-
       if (!hosts) {
         return NextResponse.json({ message: 'No Host Found' }, { status: 404 });
       }
@@ -111,7 +110,6 @@ export async function POST(req: AuthenticatedRequest) {
         { status: 201 }
       );
     } catch (error: any) {
-      console.log(error);
       return NextResponse.json(
         {
           message: 'Failed to register host',

@@ -1,4 +1,3 @@
-import { Html } from 'next/document';
 import nodemailer, { Transporter } from 'nodemailer';
 
 interface MailOptions {
