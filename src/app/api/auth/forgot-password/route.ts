@@ -45,7 +45,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
 
     if (!user) {
       return NextResponse.json<ResponseMessage>(
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Update user with OTP and expiration
     await prisma.user.update({
-      where: { email },
+      where: { email: email.toLowerCase() },
       data: { otp, otpExpiresAt }
     });
 

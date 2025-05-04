@@ -90,7 +90,7 @@ export const register = async (
 
     // Check if the email already exists in the database
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: email.toLowerCase() }
     });
     if (existingUser) {
       return NextResponse.json<RegisterResponse>(
@@ -104,7 +104,7 @@ export const register = async (
     const user = await prisma.user.create({
       data: {
         name,
-        email,
+        email: email.toLowerCase(),
         phone,
         password: hashedPassword,
         dob: parsedDob,
