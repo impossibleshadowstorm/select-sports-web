@@ -33,6 +33,7 @@ model User {
   address       Address?       @relation(fields: [addressId], references: [id])
   wallet        Wallet?
   teams         Team[]         @relation("TeamUsers")
+  notifications  Notification[]    @relation("UserNotifications")
 }
 
 model Address {
@@ -113,6 +114,7 @@ model Slot {
   team1           Team?      @relation("team1Relation", fields: [team1Id], references: [id])
   team2           Team?      @relation("team2Relation", fields: [team2Id], references: [id])
   venue           Venue      @relation(fields: [venueId], references: [id])
+  notifications  Notification[]    @relation("SlotNotifications")
 }
 
 model Booking {
@@ -211,6 +213,39 @@ model Team {
   users        User[]     @relation("TeamUsers")
 }
 
+
+model Notification {
+  id           String      @id @default(uuid()) @db.Uuid
+  title        String
+  message      String
+  type         NotificationType
+  isRead       Boolean     @default(false)
+  userId       String?     @db.Uuid  
+  slotId       String?     @db.Uuid  
+  target       TargetType             
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  expiresAt    DateTime?
+
+  user User? @relation("UserNotifications", fields: [userId], references: [id])
+  slot Slot? @relation("SlotNotifications", fields: [slotId], references: [id])
+}
+
+enum NotificationType {
+  SYSTEM
+  ADMIN
+  HOST
+}
+
+enum TargetType {
+  SPECIFIC_USER
+  ALL_USERS
+  SPECIFIC_SLOT
+  ALL_SLOTS
+  SLOT_USERS 
+  ALL_HOSTS
+  SPECIFIC_HOST
+}
 
 enum YesNo {
   NO
