@@ -106,7 +106,6 @@ export async function GET(req: AuthenticatedRequest) {
 
       return NextResponse.json({ notifications }, { status: 200 });
     } catch (error) {
-      console.error('Error fetching notifications:', error);
       return NextResponse.json(
         { message: 'Failed to get notifications' },
         { status: 500 }

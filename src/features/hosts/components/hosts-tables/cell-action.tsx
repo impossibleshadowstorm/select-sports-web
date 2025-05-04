@@ -11,7 +11,6 @@ import {
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Host } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 import { authorizedPatch } from '@/lib/api-client'; // Assuming authorizedPut for status update
 import { useSession } from 'next-auth/react';

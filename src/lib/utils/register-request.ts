@@ -126,7 +126,7 @@ export const register = async (
       userId: user.id // userId (optional depending on target)
     });
 
-    const mailRes = await sendMail({
+    await sendMail({
       to: user?.email as string,
       subject: `Welcome to SelectSportss.com, ${user?.name}!`,
       text: `
