@@ -43,7 +43,9 @@ export async function POST(
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
