@@ -73,8 +73,6 @@
 // }
 
 import { Metadata } from 'next';
-import Link from 'next/link';
-import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Terms and Conditions',
@@ -253,7 +251,36 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className='font-semibold'>9. Contact Us</h2>
+              <h2 className='font-semibold'>9. UPI and Payment Information</h2>
+              <p>
+                Select Sports uses <strong>Razorpay</strong> as its payment
+                gateway to process transactions securely. Razorpay supports
+                various payment methods including UPI (Unified Payments
+                Interface), credit/debit cards, and wallets.
+              </p>
+              <p className='mt-2'>
+                UPI is an instant real-time payment system developed by the
+                National Payments Corporation of India (NPCI), a Reserve Bank of
+                India (RBI)-regulated entity. If you use UPI for making payments
+                through our platform, your UPI transaction information is
+                handled in accordance with Razorpay’s privacy policy and terms.
+              </p>
+              <p className='mt-2'>
+                If you are a user based in India, you may see a Play Store badge
+                titled <em>&quot;Offers Payments through UPI&quot;</em>. This
+                badge indicates that the UPI implementation has been validated
+                by NPCI. The badge appears only if the app has opted in via the
+                Data Safety form on the Google Play Console.
+              </p>
+
+              <p className='mt-2'>
+                For more information about UPI or to verify the accreditation
+                process, you can contact NPCI directly.
+              </p>
+            </section>
+
+            <section>
+              <h2 className='font-semibold'>10. Contact Us</h2>
               <p>
                 For any questions or concerns regarding these Terms and
                 Conditions, please reach out to us at:
