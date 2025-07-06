@@ -2,6 +2,31 @@
 import { authenticateAdmin } from '@/middlewares/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { addNotification } from '@/lib/utils/add-notification';
+import prisma from '@/lib/utils/prisma-client';
+import { AuthenticatedRequest } from '@/lib/utils/request-type';
+
+export async function GET(req: AuthenticatedRequest) {
+  return await authenticateAdmin(req, async () => {
+    try {
+      // Optional: Check if the user is admin
+      const user = req.user as { role: string };
+      if (user.role !== 'ADMIN') {
+        return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+      }
+
+      const notifications = await prisma.notification.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+
+      return NextResponse.json({ notifications }, { status: 200 });
+    } catch (error) {
+      return NextResponse.json(
+        { message: 'Failed to fetch notifications' },
+        { status: 500 }
+      );
+    }
+  });
+}
 
 export async function POST(req: NextRequest) {
   return await authenticateAdmin(req, async () => {
