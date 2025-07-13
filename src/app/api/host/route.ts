@@ -33,7 +33,7 @@ export async function GET(req: AuthenticatedRequest) {
           message: 'Failed to retrieve hosts data',
           error: `Error: ${error.message}`
         },
-        { status: 400 }
+        { status: 500 }
       );
     }
   });
@@ -46,16 +46,16 @@ export async function POST(req: AuthenticatedRequest) {
       const body = await req.json(); // Parse request body
       // Required fields
       const requiredFields = [
-        'occupation',
-        'playFootball',
-        'car',
-        'bike',
-        'usedThisApp',
-        'experienceInOrgCS',
-        'commitHours',
-        'preferredSchedule',
-        'keyHighlights',
-        'currentLocation'
+        'occupation', // Dropdown [Enum Occupation]
+        'playFootball', // Boolean
+        'car', // Boolean
+        'bike', // Boolean
+        'usedThisApp', // Boolean
+        'experienceInOrgCS', // Boolean
+        'commitHours', // Dropdown [Enum CommitHours]
+        'preferredSchedule', // Multi Dropdown [Enum Schedule]
+        'keyHighlights', // Textfield
+        'currentLocation' // Dropdown [Enum AvailableStates]
       ];
 
       for (const field of requiredFields) {
@@ -99,7 +99,6 @@ export async function POST(req: AuthenticatedRequest) {
           experienceInOrgCS: body.experienceInOrgCS,
           commitHours: body.commitHours,
           preferredSchedule: body.preferredSchedule,
-          status: body.status,
           keyHighlights: body.keyHighlights,
           currentLocation: body.currentLocation
         }
