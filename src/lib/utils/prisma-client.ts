@@ -25,7 +25,9 @@ if (!global.prisma) {
   // });
 
   // Initialize Prisma Client with the adapter
-  global.prisma = new PrismaClient();
+  global.prisma = new PrismaClient({
+    log: ['query', 'info', 'warn', 'error']
+  });
 }
 
 prisma = global.prisma;
