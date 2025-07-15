@@ -66,7 +66,9 @@ import prisma from '@/lib/utils/prisma-client';
 import { NextResponse } from 'next/server';
 import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
+import { NotificationType, TargetType } from '@prisma/client';
 
+// Check this one..
 export async function GET(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
     try {
@@ -84,15 +86,18 @@ export async function GET(req: AuthenticatedRequest) {
       const hostId = host?.id;
 
       // 3. Build dynamic OR conditions
-      const notificationFilters: any[] = [{ target: 'ALL_USERS' }, { userId }];
+      const notificationFilters: any[] = [
+        { target: TargetType.ALL_USERS },
+        { userId }
+      ];
 
       if (bookedSlotIds.length > 0) {
         notificationFilters.push({ slotId: { in: bookedSlotIds } });
       }
 
-      if (hostId) {
-        notificationFilters.push({ type: 'ALL_HOSTS' }, { hostId });
-      }
+      // if (hostId) {
+      //   notificationFilters.push({ type: NotificationType. }, { hostId });
+      // }
 
       // 4. Fetch notifications
       const notifications = await prisma.notification.findMany({

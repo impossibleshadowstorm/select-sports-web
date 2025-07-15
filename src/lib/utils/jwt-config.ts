@@ -2,7 +2,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 
 // JWT configurations
 const jwtSecret = process.env.JWT_SECRET as string;
-const jwtExpiresIn = '1d';
+const jwtExpiresIn = '30d';
 
 // Define the user data type for the JWT payload
 interface UserData {

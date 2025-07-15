@@ -120,7 +120,7 @@ export const register = async (
     const { password: _, ...userWithoutPassword } = user; //eslint-disable-line
     await addNotification({
       title: 'User Registration',
-      message: `Dear ${name}, your registration on Saurhub.com was successful. Enjoy the game!`,
+      message: `Dear ${name}, your registration on Selectsports platform was successful. Enjoy the game!`,
       type: 'SYSTEM', // type (example: SYSTEM or whatever your NotificationType enum expects)
       target: 'SPECIFIC_USER',
       userId: user.id // userId (optional depending on target)
@@ -191,6 +191,7 @@ export const register = async (
       { status: 201 }
     );
   } catch (error: any) {
+    console.error('Register error:', error);
     return NextResponse.json<RegisterResponse>(
       { message: 'Internal Server Error', error: `Error: ${error.message}` },
       { status: 500 }
