@@ -1,6 +1,8 @@
 import prisma from '@/lib/utils/prisma-client';
 import { refundToWallet } from '@/lib/utils/refund-to-wallet';
 import { sendMail } from '@/lib/utils/nodemailer-setup';
+import { addNotification } from './add-notification';
+import { formatDateTime } from './format-date';
 
 export async function bookSlot(
   userId: string,
@@ -190,6 +192,14 @@ export async function bookSlot(
 </body>
 </html>
 `
+    });
+
+    await addNotification({
+      title: 'Slot Booking',
+      message: `Your booking on Selectsports platform for slot ${formatDateTime(slot.startTime)} is successful. Enjoy the game!`,
+      type: 'SYSTEM', // type (example: SYSTEM or whatever your NotificationType enum expects)
+      target: 'SPECIFIC_USER',
+      userId: userId // userId (optional depending on target)
     });
 
     return {
