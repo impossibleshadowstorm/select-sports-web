@@ -204,6 +204,8 @@ import { authenticate } from '@/middlewares/auth';
 import { AuthenticatedRequest } from '@/lib/utils/request-type';
 import { refundToWallet } from '@/lib/utils/refund-to-wallet';
 import { sendMail } from '@/lib/utils/nodemailer-setup';
+import { addNotification } from '@/lib/utils/add-notification';
+import { formatDateTime } from '@/lib/utils/format-date';
 
 export async function GET(req: AuthenticatedRequest) {
   return await authenticate(req, async () => {
@@ -476,6 +478,14 @@ export async function PATCH(req: AuthenticatedRequest) {
       </body>
       </html>
       `
+      });
+
+      await addNotification({
+        title: 'Slot Cancellation',
+        message: `Your booking on Selectsports platform for slot ${formatDateTime(booking.slot.startTime)} is cancelled.`,
+        type: 'SYSTEM', // type (example: SYSTEM or whatever your NotificationType enum expects)
+        target: 'SPECIFIC_USER',
+        userId: userId // userId (optional depending on target)
       });
 
       return NextResponse.json(cancelResponse, {
